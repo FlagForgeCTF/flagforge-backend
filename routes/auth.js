@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 
- 
+// Google OAuth route
 router.get('/google', passport.authenticate('google', {
   scope: ['profile', 'email'],
-  prompt: 'select_account',   
+  prompt: 'select_account',
 }));
 
 // Callback route after Google OAuth authentication
@@ -21,9 +21,13 @@ router.get('/google/callback',
 router.get('/logout', (req, res) => {
   req.logout((err) => {
     if (err) {
-      return res.redirect('/dashboard'); // In case of error during logout
+      return res.redirect('/'); // In case of error during logout
     }
-    req.session.destroy(() => {
+    // Destroy the session after logging out
+    req.session.destroy((err) => {
+      if (err) {
+        return res.redirect('/'); // In case of session destroy error
+      }
       res.redirect('/'); // Redirect to homepage after logout
     });
   });

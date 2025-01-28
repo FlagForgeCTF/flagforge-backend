@@ -36,7 +36,7 @@ app.use(passport.session());
 // Routes
 app.use('/auth', authRoutes);
 
-// Start server
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`CTF Platform running on port ${PORT}`);
