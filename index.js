@@ -15,7 +15,6 @@ mongoose.connect(process.env.MONGODB_URL)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.log('Error connecting to MongoDB:', err));
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -30,7 +29,7 @@ app.use(
 );
 
 // Initialize Passport
-require('./config/passport'); // No need to pass passport here
+require('./config/passport'); 
 app.use(passport.initialize());
 app.use(passport.session());
 

@@ -1,8 +1,13 @@
 const mongoose = require('mongoose');
 
-const UserSchema = new mongoose.Schema({
-  googleId: { type: String, unique: true },
-  email: { type: String, unique: true },
+const UserSchema = new mongoose.Schema(
+  {
+  googleId: { 
+    type: String, 
+    unique: true },
+  email: { 
+    type: String, 
+    unique: true },
   displayName: String,
   avatar: String,
   role: {
