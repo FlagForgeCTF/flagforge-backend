@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const dbURL = process.env.MONGO_URL;
+const dbURL = process.env.MONGODB_URL;
 
 if (!dbURL) {
     throw new Error('MONGO_URL is not defined in the .env file');

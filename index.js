@@ -4,16 +4,14 @@ const session = require('express-session');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth'); // Adjust path if necessary
+const problemsRoutes = require('./routes/problems');
+const connectDB = require('./config/database');
 
 dotenv.config();
-
-// Initialize Express
-const app = express();
+const app = express(); 
 
 // Database Connection
-mongoose.connect(process.env.MONGODB_URL)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.log('Error connecting to MongoDB:', err));
+connectDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -35,6 +33,7 @@ app.use(passport.session());
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/ctf', problemsRoutes);
 
 
 const PORT = process.env.PORT || 3000;
