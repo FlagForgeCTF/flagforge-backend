@@ -1,9 +1,9 @@
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/User'); // Adjust path if necessary
+import passport from "passport";
+import { Strategy } from "passport-google-oauth20";
+import User from "../models/User";
 
 passport.use(
-  new GoogleStrategy(
+  new Strategy(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -14,10 +14,9 @@ passport.use(
         const existingUser = await User.findOne({ email: profile.emails[0].value });
 
         if (existingUser) {
-          return done(null, existingUser); // User exists, log them in
+          return done(null, existingUser);
         }
 
-        // If user doesn't exist, create new user
         const newUser = new User({
           name: profile.displayName,
           email: profile.emails[0].value,
@@ -25,7 +24,7 @@ passport.use(
         });
 
         await newUser.save();
-        done(null, newUser); // New user created and logged in
+        done(null, newUser);
       } catch (err) {
         done(err);
       }
@@ -35,6 +34,7 @@ passport.use(
 
 // Serialize and deserialize user
 passport.serializeUser((user, done) => {
+  // @ts-ignore
   done(null, user.id);
 });
 
@@ -47,4 +47,4 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-module.exports = passport;
+export default passport;

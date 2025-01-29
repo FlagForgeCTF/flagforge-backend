@@ -52,9 +52,9 @@ router.post("/problem", async (req, res) => {
 // PUT:/problem/{id}
 router.put("/problem/:id", async (req, res) => {
   try {
-    const updatedProblem = await Problem.findByIdAndUpdate(req.params.id, req.body, { 
-      new: true, 
-      runValidators: true 
+    const updatedProblem = await Problem.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
     });
 
     if (!updatedProblem) {
@@ -80,4 +80,4 @@ router.delete("/problem/:id", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

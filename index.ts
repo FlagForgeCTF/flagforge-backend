@@ -1,13 +1,13 @@
-const express = require('express');
-const passport = require('passport');
-const session = require('express-session'); 
-const dotenv = require('dotenv');
-const authRoutes = require('./routes/auth'); 
-const problemsRoutes = require('./routes/problems');
-const connectDB = require('./config/database');
+import express, { type Express } from "express";
+import passport from "passport";
+import session from "express-session";
+import dotenv from "dotenv";
+import authRoutes from "./routes/auth";
+import problemsRoutes from "./routes/problems";
+import connectDB from "./config/database";
 
 dotenv.config();
-const app = express(); 
+const app: Express = express();
 
 // Database Connection
 connectDB();
@@ -26,7 +26,7 @@ app.use(
 );
 
 // Initialize Passport
-require('./config/passport'); 
+require('./config/passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -35,7 +35,7 @@ app.use('/auth', authRoutes);
 app.use('/ctf', problemsRoutes);
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`CTF Platform running on port ${PORT}`);
 });

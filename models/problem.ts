@@ -1,6 +1,4 @@
-// models/problem.js
-
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const problemSchema = new mongoose.Schema(
   {
@@ -35,8 +33,7 @@ const problemSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true, collection: "questions" } 
+  { timestamps: true, collection: "questions" }
 );
 
-const Problem = mongoose.model("Problem", problemSchema);
-module.exports = Problem;
+export default mongoose.model("Problem", problemSchema);
