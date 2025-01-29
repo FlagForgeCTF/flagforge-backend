@@ -1,3 +1,5 @@
+// models/problem.js
+
 const mongoose = require("mongoose");
 
 const problemSchema = new mongoose.Schema(
@@ -33,7 +35,7 @@ const problemSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true, collection: "questions" } // Ensure it connects to the existing "question" collection
+  { timestamps: true, collection: "questions" } 
 );
 
 const Problem = mongoose.model("Problem", problemSchema);

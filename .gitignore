@@ -25,7 +25,5 @@ yarn-error.log*
 # vercel
 .vercel
 
- 
-package-lock.json
 
 k6-test.js

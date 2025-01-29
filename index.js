@@ -1,9 +1,8 @@
 const express = require('express');
 const passport = require('passport');
-const session = require('express-session');
-const mongoose = require('mongoose');
+const session = require('express-session'); 
 const dotenv = require('dotenv');
-const authRoutes = require('./routes/auth'); // Adjust path if necessary
+const authRoutes = require('./routes/auth'); 
 const problemsRoutes = require('./routes/problems');
 const connectDB = require('./config/database');
 
