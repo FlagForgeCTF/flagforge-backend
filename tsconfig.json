@@ -1,18 +1,16 @@
 {
-  "compileOnSave": true,
   "compilerOptions": {
-    "esModuleInterop": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "lib": ["es5", "dom"],
     "module": "commonjs",
+    "esModuleInterop": true,
+    "target": "es2017",
+    "noImplicitAny": true,
     "moduleResolution": "node",
-    "noEmitOnError": true,
-    "noImplicitAny": false,
-    "outDir": "./build",
-    "removeComments": false,
     "sourceMap": true,
-    "target": "es6"
+    "outDir": "dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["node_modules/*", "src/types/*"]
+    }
   },
-  "exclude": ["./build", "node_modules/*"]
+  "include": ["src/**/*"]
 }

@@ -1,5 +1,5 @@
-import { authLogout } from "../controllers/auth.controller";
 import express from "express";
+import { authLogout } from "../controllers/auth.controller";
 import passport from "passport";
 
 const router = express.Router();
