@@ -1,25 +1,25 @@
-// routes/problems.js
+import express, { Request, Response, Router } from "express";
+import Problem from "../models/problem";
 
-const express = require("express");
-const router = express.Router();
-const Problem = require("../models/problem");
+const router = Router();
 
 // GET:/problems
-router.get("/problems", async (req, res) => {
+router.get("/problems", async (req: Request<{}, {}, {}, { page?: string }>, res: Response) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = parseInt(req.query.page as string, 10) || 1;
     const limit = 8;
     const skip = (page - 1) * limit;
 
     const problems = await Problem.find().select("-flag").skip(skip).limit(limit);
     res.json({ success: true, data: problems });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({ success: false, message: "Server Error", error: (error as Error).message });
   }
 });
+/*
 
-// GET:/problems/{id}
-router.get("/problem/:id", async (req, res) => {
+// GET:/problem/:id
+router.get("/problem/:id", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const problem = await Problem.findById(req.params.id).select("-flag");
     if (!problem) {
@@ -27,34 +27,34 @@ router.get("/problem/:id", async (req, res) => {
     }
     res.json({ success: true, data: problem });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({ success: false, message: "Server Error", error: (error as Error).message });
   }
 });
 
 // POST:/problem
-router.post("/problem", async (req, res) => {
+router.post("/problem", async (req: Request<{}, {}, IProblem>, res: Response) => {
   try {
-    const { title, description, category, points, flag } = req.body;
+    const { title, description, category, points, flag, addilinks, link, done } = req.body;
 
     if (!title || !description || !category || !points || !flag) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    const newProblem = new Problem(req.body);
+    const newProblem = new Problem({ title, description, category, points, flag, addilinks, link, done });
     await newProblem.save();
 
     res.status(201).json({ success: true, message: "Problem created successfully", data: newProblem });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({ success: false, message: "Server Error", error: (error as Error).message });
   }
 });
 
-// PUT:/problem/{id}
-router.put("/problem/:id", async (req, res) => {
+// PUT:/problem/:id
+router.put("/problem/:id", async (req: Request<{ id: string }, {}, Partial<IProblem>>, res: Response) => {
   try {
     const updatedProblem = await Problem.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     if (!updatedProblem) {
@@ -63,12 +63,12 @@ router.put("/problem/:id", async (req, res) => {
 
     res.json({ success: true, message: "Problem updated successfully", data: updatedProblem });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({ success: false, message: "Server Error", error: (error as Error).message });
   }
 });
 
-// DELETE:/problem/{id}
-router.delete("/problem/:id", async (req, res) => {
+// DELETE:/problem/:id
+router.delete("/problem/:id", async (req: Request<{ id: string }>, res: Response) => {
   try {
     const problem = await Problem.findByIdAndDelete(req.params.id);
     if (!problem) {
@@ -76,8 +76,9 @@ router.delete("/problem/:id", async (req, res) => {
     }
     res.json({ success: true, message: "Problem deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    res.status(500).json({ success: false, message: "Server Error", error: (error as Error).message });
   }
 });
+*/
 
 export default router;
