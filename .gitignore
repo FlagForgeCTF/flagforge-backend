@@ -2,5 +2,5 @@ node_modules
 .env
 build
 package-lock.json
-
+dist
 API
