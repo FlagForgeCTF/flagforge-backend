@@ -1,12 +1,13 @@
 import express, { type Express } from "express";
 import passport from "passport";
 import session from "express-session";
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth";
-import problemsRoutes from "./routes/problems";
+import authRoutes from "./routes/auth.routes";
+import problemsRoutes from "./routes/problems.routes";
+import userRoutes from "./routes/user.routes";
 import connectDB from "./config/database";
+import { config } from "./utils/config";
+import cookieparser from "cookie-parser";
 
-dotenv.config();
 const app: Express = express();
 
 // Database Connection
@@ -14,28 +15,29 @@ connectDB();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieparser());
 
 // Session configuration
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: config.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production' }
+    cookie: { secure: process.env.NODE_ENV === "production" },
   })
 );
 
 // Initialize Passport
-require('./config/passport');
+require("./config/passport");
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
-app.use('/auth', authRoutes);
-app.use('/ctf', problemsRoutes);
+app.use("/auth", authRoutes);
+app.use("/ctf", problemsRoutes);
+app.use("/user", userRoutes);
 
-
-const PORT = process.env.PORT || 3001;
+const PORT = config.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`CTF Platform running on port ${PORT}`);
 });

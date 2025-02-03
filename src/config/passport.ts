@@ -1,17 +1,20 @@
 import passport from "passport";
 import { Strategy } from "passport-google-oauth20";
-import User from "../models/User";
+import User from "../models/user.model";
+import { config } from "../utils/config";
 
 passport.use(
   new Strategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/auth/google/callback',
+      clientID: config.GOOGLE_CLIENT_ID,
+      clientSecret: config.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const existingUser = await User.findOne({ email: profile.emails[0].value });
+        const existingUser = await User.findOne({
+          email: profile.emails[0].value,
+        });
 
         if (existingUser) {
           return done(null, existingUser);

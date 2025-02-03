@@ -1,6 +1,6 @@
 import { ApiError, ApiResponse } from "../utils/ApiBase";
 import { NextFunction, Request, Response } from "express";
-import problem from "../models/problem";
+import problem from "../models/problem.model";
 
 export const getProblems = async (
   req: Request,
