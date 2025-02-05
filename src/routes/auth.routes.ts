@@ -1,5 +1,6 @@
-import express from "express";
-import { authLogout } from "../controllers/auth.controller";
+import express, { type Request, type Response } from "express";
+import { authLogout, token } from "../controllers/auth.controller";
+import { accessTokenOptions, refreshTokenOptions } from "../utils/options";
 import passport from "passport";
 
 const router = express.Router();
@@ -15,9 +16,9 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    successRedirect: "/dashboard",
     failureRedirect: "/login",
-  })
+  }),
+  token
 );
 
 // Logout route
