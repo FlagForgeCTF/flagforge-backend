@@ -95,12 +95,7 @@ const resetPassword = async (
   await passwordResetToken.deleteOne();
   return { message: "Password reset successfully" };
 };
-
-export { requestPasswordReset, resetPassword };
-
-
-
-export const token = async (req: Request, res: Response): Promise<any> => {
+const token = async (req: Request, res: Response): Promise<any> => {
 
   console.log(req.user);
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -117,3 +112,6 @@ export const token = async (req: Request, res: Response): Promise<any> => {
     .cookie("__refreshToken_", refreshToken, refreshTokenOptions)
     .json(new ApiResponse(200, "User logged in Successfully", userResponse));
 };
+export { requestPasswordReset, resetPassword, token };
+
+
