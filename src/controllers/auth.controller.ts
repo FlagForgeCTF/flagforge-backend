@@ -96,14 +96,10 @@ const resetPassword = async (
   return { message: "Password reset successfully" };
 };
 const token = async (req: Request, res: Response): Promise<any> => {
-
-  console.log(req.user);
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     // @ts-ignore
     req.user._id.toString()
   );
-
-  console.log(accessToken, refreshToken);
   // @ts-ignore
   const userResponse = req.user.toOBJ();
   return res
