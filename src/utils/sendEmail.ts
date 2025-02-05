@@ -9,7 +9,7 @@ export const sendEmail = async (
   subject: string,
   payload: object,
   template: string
-) => {
+):Promise<string> => {
   try {
     const transporter: nodemailer.Transporter = nodemailer.createTransport({
       host: config.HOST,
@@ -25,15 +25,15 @@ export const sendEmail = async (
     const source = fs.readFileSync(path.join(__dirname, template), "utf-8");
     const compiledTemplate: HandlebarsTemplateDelegate =
       Handlebars.compile(source);
-      
+
     await transporter.sendMail({
       from: config.USER,
       to: email,
       subject: subject,
       html: compiledTemplate(payload),
     });
-    console.log("Email sent successfully");
+    return "Password reset email sent successfully. Please check your inbox.";
   } catch (error) {
-    console.log(error.message, "Email not sent");
+    return "Failed to send email for password reset";
   }
 };

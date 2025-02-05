@@ -53,16 +53,18 @@ const requestPasswordReset = async (email: string) => {
   }).save();
 
   const link = `${config.BASE_URL}/passwordReset?token=${resetToken}&id=${user._id}`;
-  sendEmail(
-    user.email,
-    "Password Reset Request",
-    {
-      name: user.displayName,
-      link: link,
-    },
-    "../utils/templates/requestResetPassword.handlebars"
-  );
-  return { link };
+  try {
+    const emailMessage = await sendEmail(
+      user.email,
+      "Password Reset Request",
+      { name: user.displayName, link: link },
+      "../utils/templates/requestResetPassword.handlebars"
+    );
+
+    return new ApiResponse(200, emailMessage, link);
+  } catch (error) {
+    throw new ApiError(500, error.message, link);
+  }
 };
 
 const resetPassword = async (
@@ -81,20 +83,26 @@ const resetPassword = async (
     throw new ApiError(400, "Invalid or expired password reset token");
 
   const user = await User.findById(userID);
+  if (!user) throw new ApiError(400, "User doesnot exists");
   user.password = password;
   await user.save();
 
-  sendEmail(
-    user.email,
-    "Password Reset Successfully",
-    {
-      name: user.displayName,
-    },
-    "../utils/templates/resetPassword.handlebars"
-  );
-  await passwordResetToken.deleteOne();
-  return { message: "Password reset successfully" };
+  try {
+    const emailMessage = sendEmail(
+      user.email,
+      "Password Reset Successfully",
+      {
+        name: user.displayName,
+      },
+      "../utils/templates/resetPassword.handlebars"
+    );
+    await passwordResetToken.deleteOne();
+    return new ApiResponse(200, emailMessage);
+  } catch (error) {
+    throw new ApiError(500, error.message);
+  }
 };
+
 const token = async (req: Request, res: Response): Promise<any> => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     // @ts-ignore
@@ -108,6 +116,5 @@ const token = async (req: Request, res: Response): Promise<any> => {
     .cookie("__refreshToken_", refreshToken, refreshTokenOptions)
     .json(new ApiResponse(200, "User logged in Successfully", userResponse));
 };
+
 export { requestPasswordReset, resetPassword, token };
-
-
