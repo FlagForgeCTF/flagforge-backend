@@ -1,3 +1,4 @@
+
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/ApiBase";
@@ -19,23 +20,23 @@ const authValidation = async (
 
     try {
       const decodedToken = jwt.verify(token, config.JWT_SECRET) as DecodedToken;
-      
-      
+
       if (!decodedToken) throw new ApiError(403, "Token expired");
 
-      const user = await User.findById(decodedToken._id);
+      const user = await User.findById(decodedToken._id).select(
+        "-password -refreshToken"
+      );
+      
       if (!user) throw new ApiError(401, "Invalid access token");
 
       req.user = user;
       return next();
-
     } catch (err) {
       if (err.name === "TokenExpiredError") {
         return res.status(403).json(new ApiError(403, "Token expired"));
       }
       throw new ApiError(401, "Invalid access token");
     }
-
   } catch (error) {
     return res
       .status(error.status || 401)

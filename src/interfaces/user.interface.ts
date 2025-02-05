@@ -1,7 +1,7 @@
 import { Model, Types } from "mongoose";
 
 export interface IUser extends Document {
-  googleId?: string;
+  _id: Types.ObjectId;
   email: string;
   password: string;
   displayName?: string;

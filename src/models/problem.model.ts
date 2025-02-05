@@ -17,7 +17,7 @@ const problemSchema = new Schema<IProblem>(
     link: { type: String },
     done: { type: Boolean, default: false },
   },
-  { timestamps: true, collection: "questions" }
+  { timestamps: true, }
 );
-
-export default mongoose.model<IProblem>("Problem", problemSchema);
+const Problem = mongoose.model<IProblem>("Problem", problemSchema,"problems");
+export default Problem;

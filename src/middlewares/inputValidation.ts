@@ -36,6 +36,14 @@ const validatePassword = body("password")
   .isLength({ min: 6 })
   .withMessage("Invalid password");
 
+const validateFlag = body("flag")
+  .trim()
+  .escape()
+  .not()
+  .isEmpty()
+  .withMessage("Please enter the flag")
+  .bail();
+
 const validationResults = (
   req: Request,
   res: Response,
@@ -57,4 +65,5 @@ const sanitizeForRegister = [
 ];
 
 const sanitizeForLogin = [validateEmail, validatePassword, validationResults];
-export { sanitizeForRegister, sanitizeForLogin };
+const sanitizeForFlag = [validateFlag, validationResults];
+export { sanitizeForRegister, sanitizeForLogin, sanitizeForFlag };
