@@ -9,5 +9,8 @@ export const config = {
   JWT_SECRET: String(process.env.JWT_SECRET),
   ACCESS_TOKEN_EXPIRY: String(process.env.ACCESS_TOKEN_EXPIRY),
   REFRESH_TOKEN_EXPIRY: String(process.env.REFRESH_TOKEN_EXPIRY),
+  HOST: String(process.env.HOST),
+  USER: String(process.env.USER),
+  PASSWORD: String(process.env.PASSWORD),
+  BASE_URL: String(process.env.BASE_URL),
 };
-

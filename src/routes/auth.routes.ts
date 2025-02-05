@@ -2,6 +2,10 @@ import express, { type Request, type Response } from "express";
 import { authLogout, token } from "../controllers/auth.controller";
 import { accessTokenOptions, refreshTokenOptions } from "../utils/options";
 import passport from "passport";
+import {
+  requestResetPasswordHandler,
+  resetPasswordHandler,
+} from "../controllers/user.controller";
 
 const router = express.Router();
 
@@ -23,5 +27,9 @@ router.get(
 
 // Logout route
 router.get("/logout", authLogout);
+
+//Password reset
+router.route("/requestResetPassword").post(requestResetPasswordHandler);
+router.route("/resetPassword").post(resetPasswordHandler);
 
 export default router;
