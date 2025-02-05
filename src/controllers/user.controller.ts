@@ -2,6 +2,10 @@ import { accessTokenOptions, refreshTokenOptions } from "../utils/options";
 import User from "../models/user.model";
 import { ApiError, ApiResponse } from "../utils/ApiBase";
 import { Request, Response } from "express";
+import { requestPasswordReset, resetPassword } from "./auth.controller";
+import jwt from "jsonwebtoken";
+import { DecodedToken } from "../interfaces/user.interface";
+import { config } from "../utils/config";
 
 const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
@@ -14,7 +18,10 @@ const generateAccessAndRefreshToken = async (userID: string) => {
   return { accessToken, refreshToken };
 };
 
-const registerUser = async (req: Request, res: Response): Promise<any> => {
+const registerUserHandler = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const { displayName, email, password } = req.body;
 
@@ -51,7 +58,7 @@ const registerUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-const loginUser = async (req: Request, res: Response): Promise<any> => {
+const loginUserHandler = async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, password } = req.body;
 
@@ -83,4 +90,104 @@ const loginUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export { registerUser, loginUser };
+const rotateTokenHandler = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const refreshToken =
+      req.cookies?.__refreshToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
+
+    if (!refreshToken) throw new ApiError(403, "Refresh token required");
+
+    let decoded: DecodedToken;
+    try {
+      decoded = jwt.verify(refreshToken, config.JWT_SECRET) as DecodedToken;
+
+      if (!decoded) throw new ApiError(403, "Refresh Token expired");
+    } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        return res
+          .status(401)
+          .clearCookie("__accessToken_")
+          .clearCookie("__refreshToken_")
+          .json(new ApiError(401, "Session expired. Please log in again."));
+      }
+      throw new ApiError(403, "Invalid refresh token");
+    }
+
+    const user = await User.findById(decoded._id);
+    if (!user) throw new ApiError(401, "User not found");
+
+    if (user.refreshToken !== refreshToken) {
+      throw new ApiError(403, "Refresh token mismatch");
+    }
+
+    const accessToken = user.generateAccessToken();
+
+    return res
+      .status(200)
+      .cookie("__accessToken_", accessToken, accessTokenOptions)
+      .json(new ApiResponse(200, "Access Token refreshed Successfully"));
+  } catch (error) {
+    return res
+      .status(error.status || 500)
+      .json(new ApiError(error.status, error.message));
+  }
+};
+
+const logOutHandler = async (_: Request, res: Response): Promise<any> => {
+  try {
+    return res
+      .clearCookie("__accessToken_", accessTokenOptions)
+      .clearCookie("__refreshToken_", refreshTokenOptions)
+      .json(new ApiResponse(200, "User Logged out successfully"));
+  } catch (error) {
+    return res
+      .status(error.status || 500)
+      .json(new ApiError(500, "Failed to logout user"));
+  }
+};
+
+const requestResetPasswordHandler = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new ApiError(400, "Please provide email");
+    const requestPasswordResetService = await requestPasswordReset(email);
+    return res.json(requestPasswordResetService);
+  } catch (error) {
+    return res
+      .status(error.status || 500)
+      .json(new ApiError(error.status, error.message));
+  }
+};
+
+const resetPasswordHandler = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userID, token, password } = req.body;
+    const resetPasswordService = await resetPassword(userID, token, password);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Password reset successfully"));
+  } catch (error) {
+    return res
+      .status(error.status || 500)
+      .json(new ApiError(error.status, error.message));
+  }
+};
+
+export {
+  registerUserHandler,
+  loginUserHandler,
+  requestResetPasswordHandler,
+  resetPasswordHandler,
+  rotateTokenHandler,
+  logOutHandler,
+};
