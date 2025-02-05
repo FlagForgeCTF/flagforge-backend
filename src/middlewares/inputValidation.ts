@@ -58,31 +58,3 @@ const sanitizeForRegister = [
 
 const sanitizeForLogin = [validateEmail, validatePassword, validationResults];
 export { sanitizeForRegister, sanitizeForLogin };
-
-//   displayName: z.string(),
-//   email: z.string().email(),
-//   password: z.string().min(6),
-// });
-
-// export const userLoginSchema = z.object({
-//   email: z.string().email(),
-//   password: z.string().min(8),
-// });
-
-// export const validateData = (schema: z.ZodObject<any, any>) => {
-//   return (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       schema.parse(req.body);
-//       next();
-//     } catch (error) {
-//       if (error instanceof ZodError) {
-//         const errorMessages = error.errors.map((issue: any) => ({
-//           message: `${issue.path.join(".")} is ${issue.message}`,
-//         }));
-//         res.status(401).json(new ApiError(401, "Invalid Data", errorMessages));
-//       } else {
-//         res.status(500).json(new ApiError(500, "Internal Server Error"));
-//       }
-//     }
-//   };
-// };

@@ -24,8 +24,7 @@
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0",
-    "zod": "^3.24.1"
+    "passport-google-oauth20": "^2.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
