@@ -14,8 +14,8 @@ export const sendEmail = async (
     const transporter: nodemailer.Transporter = nodemailer.createTransport({
       host: config.HOST,
       service: "gmail",
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
       auth: {
         user: config.USER,
         pass: config.PASSWORD,
