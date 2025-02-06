@@ -9,6 +9,7 @@ import { sendEmail } from "../utils/sendEmail";
 import { accessTokenOptions } from "../utils/options";
 import { refreshTokenOptions } from "../utils/options";
 import { ApiResponse } from "../utils/ApiBase";
+import "dotenv/config";
 
 const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
@@ -110,11 +111,12 @@ const token = async (req: Request, res: Response): Promise<any> => {
   );
   // @ts-ignore
   const userResponse = req.user.toOBJ();
-  return res
+
+  console.log(process.env.FORNTEND_URL);
+  res
     .status(200)
     .cookie("__accessToken_", accessToken, accessTokenOptions)
-    .cookie("__refreshToken_", refreshToken, refreshTokenOptions)
-    .json(new ApiResponse(200, "User logged in Successfully", userResponse));
+    .cookie("__refreshToken_", refreshToken, refreshTokenOptions).json(new ApiResponse(200, "User logged in Successfully", userResponse));
 };
 
 export { requestPasswordReset, resetPassword, token };

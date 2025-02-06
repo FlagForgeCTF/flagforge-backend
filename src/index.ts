@@ -7,12 +7,22 @@ import userRoutes from "./routes/user.routes";
 import connectDB from "./config/database";
 import { config } from "./utils/config";
 import cookieparser from "cookie-parser";
+import cors from "cors";
+import helmet from "helmet";
 
 const app: Express = express();
 
 // Database Connection
 connectDB();
 
+
+app.use(cors({
+  origin: ["http://localhost:3000", "http://localhost:5173", "https://flagforge.xyz"],
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+}));
+
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieparser());
