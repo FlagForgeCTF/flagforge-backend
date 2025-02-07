@@ -17,12 +17,12 @@ connectDB();
 
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5173", "https://flagforge.xyz"],
+  origin: ["http://localhost:5173", "https://flagforge.xyz"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 }));
 
-app.use(helmet());
+// app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieparser());
