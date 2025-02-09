@@ -5,7 +5,7 @@ import {
   getProblems,
   postProblems,
   updateProblem,
-  validateFlag,
+  validateFlagAndIncrementUserScore,
 } from "../controllers/problem.controller";
 import { authValidation } from "../middlewares/authValidation";
 import { sanitizeForFlag } from "../middlewares/inputValidation";
@@ -30,6 +30,11 @@ router.put("/problem/:id", authValidation, updateProblem);
 router.delete("/problem/:id", authValidation, deleteProblem);
 
 // Flag Validation route
-router.post("/validateFlag/:id", sanitizeForFlag, authValidation, validateFlag);
+router.post(
+  "/validateFlag/:id",
+  sanitizeForFlag,
+  authValidation,
+  validateFlagAndIncrementUserScore
+);
 
 export default router;

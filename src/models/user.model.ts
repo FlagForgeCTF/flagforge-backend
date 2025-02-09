@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { config } from "../utils/config";
 
-
 const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {
     email: {
@@ -33,6 +32,8 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
         timestamp: Date,
       },
     ],
+    streak: { type: mongoose.Schema.Types.ObjectId, ref: "Streak" },
+    refreshToken: { type: String },
   },
   { timestamps: true }
 );

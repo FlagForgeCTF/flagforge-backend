@@ -3,9 +3,42 @@ import { NextFunction, Request, Response } from "express";
 import Problem from "../models/problem.model";
 import { IUser } from "../interfaces/user.interface";
 import User from "../models/user.model";
+import Streak from "../models/streak.model";
+import { Types } from "mongoose";
 
-export const getProblems = async (
-  req: Request & { user: IUser; },
+const updateStreak = async (userID: Types.ObjectId) => {
+  try {
+    let streakRecord = await Streak.findOne({ user: userID });
+    const now = new Date();
+
+    if (!streakRecord) {
+      streakRecord = await Streak.create({
+        user: userID,
+        streak: 1,
+        lastCompletionDate: now,
+      });
+    } else {
+      const lastDate = streakRecord.lastCompletionDate;
+      const timeDifference = now.getTime() - lastDate.getTime();
+      const hoursDifference = timeDifference / (1000 * 60 * 60);
+
+      if (hoursDifference < 24) {
+        streakRecord.streak += 1;
+      } else if (hoursDifference >= 48) {
+        streakRecord.streak = 1;
+      } else {
+        streakRecord.streak = 0;
+      }
+    }
+    await streakRecord.save();
+    return streakRecord._id as Types.ObjectId;
+  } catch (error) {
+    throw new ApiError(400, "Error updating streak");
+  }
+};
+
+const getProblems = async (
+  req: Request & { user: IUser },
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -45,8 +78,8 @@ export const getProblems = async (
   }
 };
 
-export const getAProblems = async (
-  req: Request & { user: IUser; },
+const getAProblems = async (
+  req: Request & { user: IUser },
   res: Response
 ): Promise<any> => {
   const problemId = req.params.id;
@@ -59,7 +92,7 @@ export const getAProblems = async (
 
     if (!foundProblem) throw new ApiError(404, "Problem not found");
 
-    // Validate status of the problem 
+    // Validate status of the problem
     if (
       user.solvedChallenges.some(
         (solved) => solved.challenge.toString() === foundProblem._id.toString()
@@ -78,10 +111,7 @@ export const getAProblems = async (
   }
 };
 
-export const postProblems = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+const postProblems = async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, description, category, points, flag } = req.body;
 
@@ -103,10 +133,7 @@ export const postProblems = async (
   }
 };
 
-export const updateProblem = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+const updateProblem = async (req: Request, res: Response): Promise<void> => {
   try {
     const updatedProblem = await Problem.findByIdAndUpdate(
       req.params.id,
@@ -134,8 +161,8 @@ export const updateProblem = async (
   }
 };
 
-export const deleteProblem = async (
-  req: Request<{ id: string; }>,
+const deleteProblem = async (
+  req: Request<{ id: string }>,
   res: Response
 ): Promise<void> => {
   try {
@@ -154,8 +181,8 @@ export const deleteProblem = async (
   }
 };
 
-export const validateFlag = async (
-  req: Request & { user?: IUser; },
+const validateFlagAndIncrementUserScore = async (
+  req: Request & { user?: IUser },
   res: Response
 ): Promise<any> => {
   try {
@@ -187,6 +214,11 @@ export const validateFlag = async (
       challenge: problem._id,
       timestamp: new Date(),
     });
+
+    // Handle Streak Updation
+    const streakID = await updateStreak(userID);
+    user.streak = streakID;
+
     await user.save();
 
     return res.status(200).json(new ApiResponse(200, "Challenge Solved"));
@@ -195,4 +227,13 @@ export const validateFlag = async (
       .status(error.status || 500)
       .json(new ApiError(error.status, error.message));
   }
+};
+
+export {
+  deleteProblem,
+  getAProblems,
+  getProblems,
+  postProblems,
+  updateProblem,
+  validateFlagAndIncrementUserScore,
 };
