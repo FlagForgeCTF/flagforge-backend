@@ -6,14 +6,17 @@ import { requestPasswordReset, resetPassword } from "./auth.controller";
 import jwt from "jsonwebtoken";
 import { DecodedToken } from "../interfaces/user.interface";
 import { config } from "../utils/config";
+import Token from "../models/token.model";
 
 const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
 
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
+  await Token.create({
+    userID: user._id,
+    token: refreshToken
+  });
 
   return { accessToken, refreshToken };
 };
@@ -23,9 +26,9 @@ const registerUserHandler = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { displayName, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-    if (!displayName || !email || !password)
+    if (!name || !email || !password)
       throw new ApiError(400, "Please provide all the required fields");
 
     const existingUser = await User.findOne({ email });
@@ -35,7 +38,7 @@ const registerUserHandler = async (
 
     const user = await User.create({
       email,
-      displayName,
+      name,
       password,
     });
 
@@ -96,7 +99,7 @@ const rotateTokenHandler = async (
 ): Promise<any> => {
   try {
     const refreshToken =
-      req.cookies?.__refreshToken ||
+      req.cookies?.__refreshToken_ ||
       req.header("Authorization")?.replace("Bearer ", "");
 
     if (!refreshToken) throw new ApiError(403, "Refresh token required");

@@ -58,7 +58,7 @@ const requestPasswordReset = async (email: string) => {
     const emailMessage = await sendEmail(
       user.email,
       "Password Reset Request",
-      { name: user.displayName, link: link },
+      { name: user.name, link: link },
       "../utils/templates/requestResetPassword.handlebars"
     );
 
@@ -93,7 +93,7 @@ const resetPassword = async (
       user.email,
       "Password Reset Successfully",
       {
-        name: user.displayName,
+        name: user.name,
       },
       "../utils/templates/resetPassword.handlebars"
     );
@@ -112,11 +112,15 @@ const token = async (req: Request, res: Response): Promise<any> => {
   // @ts-ignore
   const userResponse = req.user.toOBJ();
 
-  console.log(process.env.FORNTEND_URL);
   res
     .status(200)
     .cookie("__accessToken_", accessToken, accessTokenOptions)
-    .cookie("__refreshToken_", refreshToken, refreshTokenOptions).json(new ApiResponse(200, "User logged in Successfully", userResponse));
+    .cookie("__refreshToken_", refreshToken, refreshTokenOptions);
+
+  const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
+  const redirectURL = `${frontendURL}/register?currentUser=${JSON.stringify(userResponse)}`;
+
+  res.redirect(301, redirectURL);
 };
 
 export { requestPasswordReset, resetPassword, token };

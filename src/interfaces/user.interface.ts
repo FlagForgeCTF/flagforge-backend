@@ -4,11 +4,11 @@ export interface IUser extends Document {
   _id: Types.ObjectId;
   email: string;
   password: string;
-  displayName?: string;
-  avatar?: string;
-  role: "participant" | "admin";
+  name?: string;
+  image?: string;
+  role: "User" | "Admin";
   team?: Types.ObjectId;
-  score: number;
+  totalScore: number;
   solvedChallenges: {
     challenge: Types.ObjectId;
     timestamp: Date;
@@ -29,4 +29,4 @@ export interface DecodedToken {
   _id: string;
 }
 
-export interface UserModel extends Model<IUser, {}, IUserMethods> {}
+export interface UserModel extends Model<IUser, {}, IUserMethods> { }

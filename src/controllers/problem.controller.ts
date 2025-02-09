@@ -5,7 +5,7 @@ import { IUser } from "../interfaces/user.interface";
 import User from "../models/user.model";
 
 export const getProblems = async (
-  req: Request & { user: IUser },
+  req: Request & { user: IUser; },
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -46,7 +46,7 @@ export const getProblems = async (
 };
 
 export const getAProblems = async (
-  req: Request & { user: IUser },
+  req: Request & { user: IUser; },
   res: Response
 ): Promise<any> => {
   const problemId = req.params.id;
@@ -135,7 +135,7 @@ export const updateProblem = async (
 };
 
 export const deleteProblem = async (
-  req: Request<{ id: string }>,
+  req: Request<{ id: string; }>,
   res: Response
 ): Promise<void> => {
   try {
@@ -155,7 +155,7 @@ export const deleteProblem = async (
 };
 
 export const validateFlag = async (
-  req: Request & { user?: IUser },
+  req: Request & { user?: IUser; },
   res: Response
 ): Promise<any> => {
   try {
@@ -182,7 +182,7 @@ export const validateFlag = async (
     ) {
       throw new ApiError(400, "Challenge is already solved");
     }
-    user.score += problem.points;
+    user.totalScore += problem.points;
     user.solvedChallenges.push({
       challenge: problem._id,
       timestamp: new Date(),

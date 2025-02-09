@@ -15,22 +15,24 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
       type: String,
       require: [true, "Password is required"],
     },
-    displayName: String,
-    avatar: String,
+    name: String,
+    image: {
+      type: String,
+      default: ""
+    },
     role: {
       type: String,
-      enum: ["participant", "admin"],
-      default: "participant",
+      enum: ["User", "Admin"],
+      default: "User",
     },
     team: mongoose.Schema.Types.ObjectId,
-    score: { type: Number, default: 0 },
+    totalScore: { type: Number, default: 0 },
     solvedChallenges: [
       {
         challenge: mongoose.Schema.Types.ObjectId,
         timestamp: Date,
       },
     ],
-    refreshToken: { type: String },
   },
   { timestamps: true }
 );
@@ -49,8 +51,8 @@ userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this._id,
-      displayName: this.displayName,
-      avatar: this.avatar,
+      name: this.name,
+      image: this.image || "",
     },
     config.JWT_SECRET,
     { expiresIn: "1h" }

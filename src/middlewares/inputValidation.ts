@@ -14,15 +14,15 @@ const validateEmail = body("email")
   .isEmail()
   .withMessage("Invalid email address");
 
-const validateDisplayName = body("displayName")
+const validateDisplayName = body("name")
   .trim()
   .escape()
   .not()
   .isEmpty()
-  .withMessage("Display Name is required")
+  .withMessage("Name is required")
   .bail()
-  .matches(/^[a-zA-Z0-9\s.,'-]+$/)
-  .withMessage("Display Name must contain only letters");
+  .matches(/^[a-zA-Z0-9\s.,'_/-]+$/)
+  .withMessage("Name must contain only letters");
 
 const validatePassword = body("password")
   .trim()
@@ -35,6 +35,8 @@ const validatePassword = body("password")
   .withMessage("Password must be alphanumeric")
   .isLength({ min: 6 })
   .withMessage("Invalid password");
+
+const validateImage = body("image").trim().escape().bail();
 
 const validateFlag = body("flag")
   .trim()
@@ -61,6 +63,7 @@ const sanitizeForRegister = [
   validateEmail,
   validateDisplayName,
   validatePassword,
+  validateImage,
   validationResults,
 ];
 

@@ -13,7 +13,7 @@ const authValidation = async (
 ): Promise<any> => {
   try {
     const token =
-      req.cookies?.__accessToken ||
+      req.cookies?.__accessToken_ ||
       req.header("Authorization")?.replace("Bearer ", "");
 
     if (!token) throw new ApiError(401, "Unauthorized: Token is missing");
@@ -24,9 +24,9 @@ const authValidation = async (
       if (!decodedToken) throw new ApiError(403, "Token expired");
 
       const user = await User.findById(decodedToken._id).select(
-        "-password -refreshToken"
+        "-password"
       );
-      
+
       if (!user) throw new ApiError(401, "Invalid access token");
 
       req.user = user;
