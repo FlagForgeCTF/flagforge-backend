@@ -53,7 +53,7 @@ const requestPasswordReset = async (email: string) => {
     token: hash,
   }).save();
 
-  const link = `${config.BASE_URL}/passwordReset?token=${resetToken}&id=${user._id}`;
+  const link = `${config.BASE_URL}/resetPassword/${resetToken}/${user._id}`;
   try {
     const emailMessage = await sendEmail(
       user.email,
@@ -62,9 +62,9 @@ const requestPasswordReset = async (email: string) => {
       "../utils/templates/requestResetPassword.handlebars"
     );
 
-    return new ApiResponse(200, emailMessage, link);
+    return new ApiResponse(200, emailMessage);
   } catch (error) {
-    throw new ApiError(500, error.message, link);
+    throw new ApiError(500, error.message);
   }
 };
 
