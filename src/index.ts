@@ -17,7 +17,7 @@ connectDB();
 
 
 app.use(cors({
-  origin: ["http://localhost:5173", "https://flagforge.xyz"],
+  origin: ["http://localhost:5173", "https://flagforge.xyz", "https://api.flagforge.xyz"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 }));
