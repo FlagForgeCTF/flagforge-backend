@@ -4,8 +4,41 @@ import Problem from "../models/problem.model";
 import { IUser } from "../interfaces/user.interface";
 import User from "../models/user.model";
 import UserQuestion from "../models/userQuestions.model";
+import Streak from "../models/streak.model";
+import { Types } from "mongoose";
 
-export const getProblems = async (
+const updateStreak = async (userID: Types.ObjectId) => {
+  try {
+    let streakRecord = await Streak.findOne({ user: userID });
+    const now = new Date();
+
+    if (!streakRecord) {
+      streakRecord = await Streak.create({
+        user: userID,
+        streak: 1,
+        lastCompletionDate: now,
+      });
+    } else {
+      const lastDate = streakRecord.lastCompletionDate;
+      const timeDifference = now.getTime() - lastDate.getTime();
+      const hoursDifference = timeDifference / (1000 * 60 * 60);
+
+      if (hoursDifference < 24) {
+        streakRecord.streak += 1;
+      } else if (hoursDifference >= 48) {
+        streakRecord.streak = 1;
+      } else {
+        streakRecord.streak = 0;
+      }
+    }
+    await streakRecord.save();
+    return streakRecord._id as Types.ObjectId;
+  } catch (error) {
+    throw new ApiError(400, "Error updating streak");
+  }
+};
+
+const getProblems = async (
   req: Request & { user: IUser; },
   res: Response,
   next: NextFunction
@@ -51,7 +84,7 @@ export const getProblems = async (
   }
 };
 
-export const getAProblems = async (
+const getAProblems = async (
   req: Request & { user: IUser; },
   res: Response
 ): Promise<any> => {
@@ -85,10 +118,7 @@ export const getAProblems = async (
   }
 };
 
-export const postProblems = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+const postProblems = async (req: Request, res: Response): Promise<void> => {
   try {
     const { title, description, category, points, flag } = req.body;
 
@@ -110,10 +140,7 @@ export const postProblems = async (
   }
 };
 
-export const updateProblem = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+const updateProblem = async (req: Request, res: Response): Promise<void> => {
   try {
     const updatedProblem = await Problem.findByIdAndUpdate(
       req.params.id,
@@ -141,7 +168,7 @@ export const updateProblem = async (
   }
 };
 
-export const deleteProblem = async (
+const deleteProblem = async (
   req: Request<{ id: string; }>,
   res: Response
 ): Promise<void> => {
@@ -162,7 +189,8 @@ export const deleteProblem = async (
 };
 
 
-export const validateFlag = async (
+
+const validateFlagAndIncrementUserScore = async (
   req: Request & { user?: IUser; },
   res: Response
 ): Promise<any> => {
@@ -192,6 +220,11 @@ export const validateFlag = async (
       throw new ApiError(400, "Challenge is already solved");
     }
     user.totalScore += problem.points;
+
+    // Handle Streak Updation
+    const streakID = await updateStreak(userID);
+    user.streak = streakID;
+
     await user.save();
 
     let userQuestion = await UserQuestion.findOne({ userId: userID });
@@ -211,4 +244,13 @@ export const validateFlag = async (
       .status(error.status || 500)
       .json(new ApiError(error.status, error.message));
   }
+};
+
+export {
+  deleteProblem,
+  getAProblems,
+  getProblems,
+  postProblems,
+  updateProblem,
+  validateFlagAndIncrementUserScore,
 };

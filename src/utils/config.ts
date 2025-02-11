@@ -10,7 +10,7 @@ export const config = {
   ACCESS_TOKEN_EXPIRY: String(process.env.ACCESS_TOKEN_EXPIRY),
   REFRESH_TOKEN_EXPIRY: String(process.env.REFRESH_TOKEN_EXPIRY),
   HOST: String(process.env.HOST),
-  USER: String(process.env.USER),
-  PASSWORD: String(process.env.PASSWORD),
+  MAILGUN_API_KEY: String(process.env.MAILGUN_API_KEY),
+  MAILGUN_DOMAIN: String(process.env.MAILGUN_DOMAIN),
   BASE_URL: String(process.env.BASE_URL),
 };

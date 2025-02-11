@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+import mailgun from "mailgun-js";
 import { config } from "./config";
 import fs from "fs";
 import path from "path";
@@ -9,31 +9,30 @@ export const sendEmail = async (
   subject: string,
   payload: object,
   template: string
-):Promise<string> => {
+): Promise<string> => {
   try {
-    const transporter: nodemailer.Transporter = nodemailer.createTransport({
-      host: config.HOST,
-      service: "gmail",
-      port: 587,
-      secure: false,
-      auth: {
-        user: config.USER,
-        pass: config.PASSWORD,
-      },
+    const mg = mailgun({
+      apiKey: config.MAILGUN_API_KEY,
+      domain: config.MAILGUN_DOMAIN,
     });
 
     const source = fs.readFileSync(path.join(__dirname, template), "utf-8");
     const compiledTemplate: HandlebarsTemplateDelegate =
       Handlebars.compile(source);
+    const htmlContent = compiledTemplate(payload);
 
-    await transporter.sendMail({
-      from: config.USER,
+    const mailOptions = {
+      from: `<no-reply@${config.MAILGUN_DOMAIN}>`,
       to: email,
       subject: subject,
-      html: compiledTemplate(payload),
-    });
+      html: htmlContent,
+    };
+
+    // Send email using Mailgun
+    await mg.messages().send(mailOptions);
+
     return "Password reset email sent successfully. Please check your inbox.";
   } catch (error) {
-    return "Failed to send email for password reset";
+    return "Failed to send email for password reset.";
   }
 };

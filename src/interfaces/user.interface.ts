@@ -13,6 +13,7 @@ export interface IUser extends Document {
     challenge: Types.ObjectId;
     timestamp: Date;
   }[];
+  streak?: Types.ObjectId | null;
   refreshToken: string;
   createdAt: Date;
   updatedAt: Date;

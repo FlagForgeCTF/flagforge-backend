@@ -279,8 +279,9 @@ const resetPasswordHandler = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { userID, token, password } = req.body;
-    const resetPasswordService = await resetPassword(userID, token, password);
+    const { token, id } = req.params;
+    const { password } = req.body;
+    await resetPassword(id, token, password);
     return res
       .status(200)
       .json(new ApiResponse(200, "Password reset successfully"));
