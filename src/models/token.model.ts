@@ -1,8 +1,9 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { Schema } from "mongoose";
+import { IToken } from "../interfaces/token.interface";
 
-const tokenSchema = new mongoose.Schema({
+const tokenSchema = new mongoose.Schema<IToken>({
   userID: {
-    type: Types.ObjectId,
+    type: Schema.Types.ObjectId,
     require: true,
     ref: "User",
   },
@@ -16,6 +17,6 @@ const tokenSchema = new mongoose.Schema({
     expires: 3600,
   },
 });
-const Token = mongoose.model("Token", tokenSchema);
+const Token = mongoose.model<IToken>("Token", tokenSchema, "token");
 
 export default Token;

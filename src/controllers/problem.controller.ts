@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import Problem from "../models/problem.model";
 import { IUser } from "../interfaces/user.interface";
 import User from "../models/user.model";
+import UserQuestion from "../models/userQuestions.model";
 
 export const getProblems = async (
   req: Request & { user: IUser; },
@@ -22,21 +23,26 @@ export const getProblems = async (
 
     if (!problems) throw new ApiError(400, "Failed to fetch problems");
 
-    // Get solved problems
-    const solvedProblems = new Set(
-      user.solvedChallenges.map((solved) => solved.challenge.toString())
+    const solvedProblem = await UserQuestion.find({ userId: user._id });
+
+    const solvedProblemsId = new Set(
+      solvedProblem.map((solved) => solved.questionId.toString())
     );
 
-    // Update the status of problems
-    const problemWithStatus = problems.map((problem) => ({
-      ...problem.toObject(),
-      done: solvedProblems.has(problem._id.toString()),
-    }));
+    const totalScore = await User.findById(user._id);
+
+    const problemsWithStatus = problems.map(problem => {
+      const isSolved = solvedProblemsId.has(problem._id.toString());
+      return {
+        ...problem.toObject(),
+        done: isSolved,
+      };
+    });
 
     res
       .status(200)
       .json(
-        new ApiResponse(200, "Problem fetched successfully", problemWithStatus)
+        new ApiResponse(200, "Problem fetched successfully", { "questions": problemsWithStatus, "score": totalScore.totalScore, "questionDone": solvedProblem.length })
       );
   } catch (error) {
     res
@@ -59,10 +65,11 @@ export const getAProblems = async (
 
     if (!foundProblem) throw new ApiError(404, "Problem not found");
 
-    // Validate status of the problem 
+
+    const solvedProblem = await UserQuestion.find({ userId: user._id });
     if (
-      user.solvedChallenges.some(
-        (solved) => solved.challenge.toString() === foundProblem._id.toString()
+      solvedProblem.some(
+        (solved) => solved.questionId.toString() === foundProblem._id.toString()
       )
     ) {
       foundProblem.done = true;
@@ -154,40 +161,49 @@ export const deleteProblem = async (
   }
 };
 
+
 export const validateFlag = async (
   req: Request & { user?: IUser; },
   res: Response
 ): Promise<any> => {
   try {
     const { flag } = req.body;
-    const userID = req.user._id;
+    const userID = req.user?._id;
     const problemID = req.params.id;
+
+    if (!userID) {
+      throw new ApiError(401, "Unauthorized. User not found.");
+    }
 
     if (!flag) throw new ApiError(400, "Provide the flag");
 
     const problem = await Problem.findById(problemID).select("flag points");
 
-    if (!problem) throw new ApiError(500, "An error occured");
+    if (!problem) throw new ApiError(404, "Problem not found");
 
     if (flag !== problem.flag) throw new ApiError(401, "Incorrect flag");
 
-    // Increment user score
     const user = await User.findById(userID);
-    if (!user) throw new ApiError(400, "User not found");
+    if (!user) throw new ApiError(404, "User not found");
 
-    if (
-      user.solvedChallenges.some(
-        (solved) => solved.challenge.toString() === problemID
-      )
-    ) {
+    const existingUserQuestion = await UserQuestion.findOne({ userId: userID, "questions.questionId": problemID });
+
+    if (existingUserQuestion) {
       throw new ApiError(400, "Challenge is already solved");
     }
     user.totalScore += problem.points;
-    user.solvedChallenges.push({
-      challenge: problem._id,
-      timestamp: new Date(),
-    });
     await user.save();
+
+    let userQuestion = await UserQuestion.findOne({ userId: userID });
+
+    if (!userQuestion) {
+      userQuestion = new UserQuestion({ userId: userID, questions: [] });
+    }
+
+    await UserQuestion.create({
+      questionId: problemID,
+      userId: userID
+    });
 
     return res.status(200).json(new ApiResponse(200, "Challenge Solved"));
   } catch (error) {

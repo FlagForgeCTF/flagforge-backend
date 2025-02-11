@@ -4,6 +4,7 @@ import {
   loginUserHandler,
   registerUserHandler,
   rotateTokenHandler,
+  leaderboardHandler
 } from "../controllers/user.controller";
 import {
   sanitizeForLogin,
@@ -14,7 +15,9 @@ const router = Router();
 
 router.route("/signup").post(sanitizeForRegister, registerUserHandler);
 router.route("/login").post(sanitizeForLogin, loginUserHandler);
-router.route("/rotateToken").get(rotateTokenHandler);
+router.route("/rotateToken").post(rotateTokenHandler);
 router.route("/logout").get(logOutHandler);
+
+router.route("/leaderboard").get(leaderboardHandler);
 
 export default router;

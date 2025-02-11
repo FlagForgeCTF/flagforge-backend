@@ -10,28 +10,30 @@ import { accessTokenOptions } from "../utils/options";
 import { refreshTokenOptions } from "../utils/options";
 import { ApiResponse } from "../utils/ApiBase";
 import "dotenv/config";
+import { generateAccessAndRefreshToken } from "./user.controller";
 
-const generateAccessAndRefreshToken = async (userID: string) => {
-  const user = await User.findById(userID);
-  const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
+// const generateAccessAndRefreshToken = async (userID: string) => {
+//   const user = await User.findById(userID);
+//   const accessToken = user.generateAccessToken();
+//   const refreshToken = user.generateRefreshToken();
 
-  user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false });
+//   await Token.create({ userID: user._id, token: refreshToken });
+//   // user.refreshToken = refreshToken;
+//   // await user.save({ validateBeforeSave: false });
 
-  return { accessToken, refreshToken };
-};
+//   return { accessToken, refreshToken };
+// };
 
 export const authLogout = (req: Request, res: Response) => {
   req.logout((err) => {
     if (err) {
-      return res.redirect("/");
+      return res.status(301).json({ "message": "Error while logging out" });
     }
     req.session.destroy((err) => {
       if (err) {
-        return res.redirect("/");
+        return res.status(301).json({ "message": "Error while logging out" });
       }
-      res.redirect("/");
+      res.status(200).json({ "message": "Successfully logged out" });
     });
   });
 };

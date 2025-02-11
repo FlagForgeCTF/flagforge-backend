@@ -31,5 +31,4 @@ router.delete("/problem/:id", authValidation, deleteProblem);
 
 // Flag Validation route
 router.post("/validateFlag/:id", sanitizeForFlag, authValidation, validateFlag);
-
 export default router;
