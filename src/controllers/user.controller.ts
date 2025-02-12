@@ -6,27 +6,12 @@ import { requestPasswordReset, resetPassword } from "./auth.controller";
 import jwt from "jsonwebtoken";
 import { DecodedToken } from "../interfaces/user.interface";
 import { config } from "../utils/config";
-import Token from "../models/token.model";
 import { updateLeaderboard } from "./leaderboard.controller";
 
-const generateAccessAndRefreshToken = async (userID: string) => {
+export const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
-
-  await Token.findOneAndUpdate(
-    { userID: user._id },
-    {
-      $set: {
-        token: refreshToken,
-      },
-    },
-    {
-      upsert: true,
-      new: true,
-      setDefaultsOnInsert: true
-    }
-  );
 
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
@@ -109,7 +94,6 @@ const loginUserHandler = async (req: Request, res: Response): Promise<any> => {
       .json(new ApiError(error.status, error.message));
   }
 };
-// const rotateTokenHandler = async (
 //   req: Request,
 //   res: Response
 // ): Promise<any> => {
@@ -168,19 +152,12 @@ const rotateTokenHandler = async (
       req.cookies?.__refreshToken_ ||
       req.header("Authorization")?.replace("Bearer ", "");
 
-    
-
     if (!refreshToken) throw new ApiError(403, "Refresh token required");
 
     let decoded: DecodedToken;
-
-    // Validate Refresh Token
     try {
       decoded = jwt.verify(refreshToken, config.JWT_SECRET) as DecodedToken;
       if (!decoded) throw new ApiError(403, "Refresh Token expired");
-
-     
-
     } catch (err) {
       if (err.name === "TokenExpiredError") {
         return res
@@ -195,34 +172,13 @@ const rotateTokenHandler = async (
     const user = await User.findById(decoded._id);
     if (!user) throw new ApiError(401, "User not found");
 
-    
-
-    const existingToken = await Token.findOne({ userID: user._id });
-    console.log(existingToken);
-
-    if (!existingToken || existingToken.token !== refreshToken) {
-      throw new ApiError(403, "Unauthorized token rotation");
+    if (user.refreshToken !== refreshToken) {
+      throw new ApiError(403, "Refresh token mismatch");
     }
-
-
-    
-
-
-
-    // if (existingToken.rotationCount && existingToken.rotationCount >= 5) {
-    //   return res
-    //     .status(403)
-    //     .clearCookie("__accessToken_")
-    //     .clearCookie("__refreshToken_")
-    //     .json(new ApiError(403, "Maximum token rotations exceeded. Please log in again."));
-    // }
-
-    const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id.toString());
-
+    const accessToken = user.generateAccessToken();
     return res
       .status(200)
       .cookie("__accessToken_", accessToken, accessTokenOptions)
-      .cookie("__refreshToken_", newRefreshToken, refreshTokenOptions)
       .json(new ApiResponse(200, "Access Token refreshed Successfully"));
   } catch (error) {
     return res
@@ -295,8 +251,6 @@ const getUserProfile = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-
-
 export {
   registerUserHandler,
   loginUserHandler,
@@ -305,5 +259,4 @@ export {
   rotateTokenHandler,
   logOutHandler,
   getUserProfile,
-
 };
