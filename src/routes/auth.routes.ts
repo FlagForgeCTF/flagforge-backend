@@ -5,6 +5,7 @@ import {
   requestResetPasswordHandler,
   resetPasswordHandler,
 } from "../controllers/user.controller";
+import { sanitizeForEmail } from "../middlewares/inputValidation";
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.get(
   "/google/callback",
   passport.authenticate("google", {
     failureRedirect: "/login",
-    session: false
+    session: false,
   }),
   token
 );
@@ -30,7 +31,9 @@ router.get(
 router.get("/logout", authLogout);
 
 //Password reset
-router.route("/requestResetPassword").post(requestResetPasswordHandler);
+router
+  .route("/requestResetPassword")
+  .post(sanitizeForEmail, requestResetPasswordHandler);
 router.route("/resetPassword/:token/:id").post(resetPasswordHandler);
 
 export default router;

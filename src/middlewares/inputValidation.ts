@@ -69,4 +69,10 @@ const sanitizeForRegister = [
 
 const sanitizeForLogin = [validateEmail, validatePassword, validationResults];
 const sanitizeForFlag = [validateFlag, validationResults];
-export { sanitizeForRegister, sanitizeForLogin, sanitizeForFlag };
+const sanitizeForEmail = [validateEmail, validationResults];
+export {
+  sanitizeForRegister,
+  sanitizeForLogin,
+  sanitizeForFlag,
+  sanitizeForEmail,
+};
