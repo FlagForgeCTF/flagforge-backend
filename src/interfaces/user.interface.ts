@@ -14,6 +14,7 @@ export interface IUser extends Document {
     timestamp: Date;
   }[];
   streak?: Types.ObjectId | null;
+  rank?:number
   refreshToken: string;
   createdAt: Date;
   updatedAt: Date;

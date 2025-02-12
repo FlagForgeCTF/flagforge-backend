@@ -6,6 +6,7 @@ import User from "../models/user.model";
 import UserQuestion from "../models/userQuestions.model";
 import Streak from "../models/streak.model";
 import { Types } from "mongoose";
+import { getTopUser, updateLeaderboard } from "./leaderboard.controller";
 
 const updateStreak = async (userID: Types.ObjectId) => {
   try {
@@ -34,7 +35,7 @@ const updateStreak = async (userID: Types.ObjectId) => {
     await streakRecord.save();
     return streakRecord._id as Types.ObjectId;
   } catch (error) {
-    throw new ApiError(400, "Error updating streak");
+    throw new ApiError(500, "Error updating streak");
   }
 };
 
@@ -54,7 +55,7 @@ const getProblems = async (
       .skip(skip)
       .limit(limit);
 
-    if (!problems) throw new ApiError(400, "Failed to fetch problems");
+    if (!problems) throw new ApiError(404, "Failed to fetch problems");
 
     const solvedProblem = await UserQuestion.find({ userId: user._id });
 
@@ -129,7 +130,6 @@ const postProblems = async (req: Request, res: Response): Promise<void> => {
 
     const newProblem = new Problem(req.body);
     await newProblem.save();
-
     res
       .status(201)
       .json(new ApiResponse(201, "Problem created successfully", newProblem));
@@ -224,6 +224,16 @@ const validateFlagAndIncrementUserScore = async (
     // Handle Streak Updation
     const streakID = await updateStreak(userID);
     user.streak = streakID;
+
+    // Update Leaderboard
+    await updateLeaderboard(userID, user.totalScore);
+
+    // Update User rank
+    const rank = await getTopUser(-1);
+    const userRank = rank.findIndex(
+      (user) => user.userID.toString() === userID.toString()
+    );
+    user.rank = userRank + 1;
 
     await user.save();
 

@@ -13,4 +13,6 @@ export const config = {
   MAILGUN_API_KEY: String(process.env.MAILGUN_API_KEY),
   MAILGUN_DOMAIN: String(process.env.MAILGUN_DOMAIN),
   BASE_URL: String(process.env.BASE_URL),
+  REDIS_HOST: String(process.env.REDIS_HOST),
+  REDIS_PORT: Number(process.env.REDIS_PORT),
 };

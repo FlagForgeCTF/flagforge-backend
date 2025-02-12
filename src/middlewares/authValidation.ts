@@ -22,10 +22,7 @@ const authValidation = async (
       const decodedToken = jwt.verify(token, config.JWT_SECRET) as DecodedToken;
 
       if (!decodedToken) throw new ApiError(403, "Token expired");
-
-      const user = await User.findById(decodedToken._id).select(
-        "-password"
-      );
+      const user = await User.findById(decodedToken._id).select("-password -otherSensitiveField");
 
       if (!user) throw new ApiError(401, "Invalid access token");
 

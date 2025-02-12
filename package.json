@@ -21,6 +21,7 @@
     "express-validator": "^7.2.1",
     "handlebars": "^4.7.8",
     "helmet": "^8.0.0",
+    "ioredis": "^5.5.0",
     "jsonwebtoken": "^9.0.2",
     "mailgun-js": "^0.22.0",
     "mongoose": "^8.9.5",

@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     name: String,
     image: {
       type: String,
-      default: ""
+      default: "",
     },
     role: {
       type: String,
@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     //   },
     // ],
     streak: { type: mongoose.Schema.Types.ObjectId, ref: "Streak" },
+    rank: { type: Number },
     refreshToken: { type: String },
   },
   { timestamps: true }

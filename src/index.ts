@@ -4,7 +4,8 @@ import session from "express-session";
 import authRoutes from "./routes/auth.routes";
 import problemsRoutes from "./routes/problems.routes";
 import userRoutes from "./routes/user.routes";
-import connectDB from "./config/database";
+import leaderboardRoutes from "./routes/leaderboard.routes";
+import { connectDB, connectRedis } from "./config/database";
 import { config } from "./utils/config";
 import cookieparser from "cookie-parser";
 import cors from "cors";
@@ -14,6 +15,7 @@ const app: Express = express();
 
 // Database Connection
 connectDB();
+connectRedis();
 
 
 app.use(cors({
@@ -46,6 +48,7 @@ app.use(passport.session());
 app.use("/auth", authRoutes);
 app.use("/ctf", problemsRoutes);
 app.use("/user", userRoutes);
+app.use("/leaderboard", leaderboardRoutes);
 
 const PORT = config.PORT || 3001;
 app.listen(PORT, () => {

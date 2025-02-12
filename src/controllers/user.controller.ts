@@ -7,32 +7,9 @@ import jwt from "jsonwebtoken";
 import { DecodedToken } from "../interfaces/user.interface";
 import { config } from "../utils/config";
 import Token from "../models/token.model";
+import { updateLeaderboard } from "./leaderboard.controller";
 
-// const generateAccessAndRefreshToken = async (userID: string) => {
-//   const user = await User.findById(userID);
-//   const accessToken = user.generateAccessToken();
-//   const refreshToken = user.generateRefreshToken();
-//   const existingToken = await Token.findOne({ userID: user._id });
-
-
-//   if (existingToken) {
-//     existingToken.token = refreshToken;
-//     await existingToken.save();
-//   } else {
-//     await Token.create({
-//       userID: user._id,
-//       token: refreshToken,
-//     });
-//   }
-
-//   return { accessToken, refreshToken };
-// };
-
-
-
-export const generateAccessAndRefreshToken = async (userID: string) => {
-
-  console.log(userID);
+const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
@@ -50,6 +27,9 @@ export const generateAccessAndRefreshToken = async (userID: string) => {
       setDefaultsOnInsert: true
     }
   );
+
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken };
 };
@@ -82,6 +62,10 @@ const registerUserHandler = async (
     );
 
     const userResponse = user.toOBJ();
+
+    // Update Leaderboard
+    await updateLeaderboard(user._id, user.totalScore);
+
     return res
       .status(200)
       .cookie("__accessToken_", accessToken, accessTokenOptions)
@@ -184,17 +168,18 @@ const rotateTokenHandler = async (
       req.cookies?.__refreshToken_ ||
       req.header("Authorization")?.replace("Bearer ", "");
 
-    console.log(refreshToken);
+    
 
     if (!refreshToken) throw new ApiError(403, "Refresh token required");
 
     let decoded: DecodedToken;
+
+    // Validate Refresh Token
     try {
       decoded = jwt.verify(refreshToken, config.JWT_SECRET) as DecodedToken;
-
       if (!decoded) throw new ApiError(403, "Refresh Token expired");
 
-      console.log(decoded);
+     
 
     } catch (err) {
       if (err.name === "TokenExpiredError") {
@@ -210,7 +195,7 @@ const rotateTokenHandler = async (
     const user = await User.findById(decoded._id);
     if (!user) throw new ApiError(401, "User not found");
 
-    console.log(user);
+    
 
     const existingToken = await Token.findOne({ userID: user._id });
     console.log(existingToken);
@@ -220,7 +205,8 @@ const rotateTokenHandler = async (
     }
 
 
-    console.log(existingToken);
+    
+
 
 
     // if (existingToken.rotationCount && existingToken.rotationCount >= 5) {
@@ -292,23 +278,24 @@ const resetPasswordHandler = async (
   }
 };
 
-
-const leaderboardHandler = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
+const getUserProfile = async (req: Request, res: Response): Promise<any> => {
   try {
+    const userID = req.params.id;
+    if (!userID) throw new ApiError(400, "Please provide user ID");
 
-    const user = await User.find().select("name email image totalScore").limit(50).sort({ totalScore: "desc" });
-
-    if (!user) throw new ApiError(404, "User Not found");
-
-    return res.status(200).json(user);
-
+    const user = await User.findById(userID).select("-password -refreshToken");
+    if (!user) throw new ApiError(404, "User not found");
+    res
+      .status(200)
+      .json(new ApiResponse(200, "User profile fetched successfully", user));
   } catch (error) {
-    return res.status(error.status || 500).json(new ApiError(error.status, error.message));
+    return res
+      .status(error.status || 500)
+      .json(new ApiError(error.status, error.message));
   }
 };
+
+
 
 export {
   registerUserHandler,
@@ -317,5 +304,6 @@ export {
   resetPasswordHandler,
   rotateTokenHandler,
   logOutHandler,
-  leaderboardHandler
+  getUserProfile,
+
 };
