@@ -16,7 +16,7 @@ const router = Router();
 
 router.route("/signup").post(sanitizeForRegister, registerUserHandler);
 router.route("/login").post(sanitizeForLogin, loginUserHandler);
-router.route("/rotateToken").get(authValidation, rotateTokenHandler);
+router.route("/rotateToken").get(rotateTokenHandler);
 router.route("/logout").get(logOutHandler);
 
 router.route("/getUserProfile/:id").get(authValidation, getUserProfile);

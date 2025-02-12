@@ -3,7 +3,6 @@ import { NextFunction, Request, Response } from "express";
 import Problem from "../models/problem.model";
 import { IUser } from "../interfaces/user.interface";
 import User from "../models/user.model";
-import UserQuestion from "../models/userQuestions.model";
 import Streak from "../models/streak.model";
 import { Types } from "mongoose";
 import { getTopUser, updateLeaderboard } from "./leaderboard.controller";
@@ -40,7 +39,7 @@ const updateStreak = async (userID: Types.ObjectId) => {
 };
 
 const getProblems = async (
-  req: Request & { user: IUser; },
+  req: Request & { user: IUser },
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -57,27 +56,26 @@ const getProblems = async (
 
     if (!problems) throw new ApiError(404, "Failed to fetch problems");
 
-    const solvedProblem = await UserQuestion.find({ userId: user._id });
+    const userProblem = await User.findById({ _id: user._id });
 
-    const solvedProblemsId = new Set(
-      solvedProblem.map((solved) => solved.questionId.toString())
+    // Get solved problems
+    const solvedProblems = new Set(
+      user.solvedChallenges.map((solved) => solved.challenge.toString())
     );
 
-    const totalScore = await User.findById(user._id);
+    // Update the status of problems
+    const problemWithStatus = problems.map((problem) => ({
+      ...problem.toObject(),
+      done: solvedProblems.has(problem._id.toString()),
+    }));
 
-    const problemsWithStatus = problems.map(problem => {
-      const isSolved = solvedProblemsId.has(problem._id.toString());
-      return {
-        ...problem.toObject(),
-        done: isSolved,
-      };
-    });
-
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, "Problem fetched successfully", { "questions": problemsWithStatus, "score": totalScore.totalScore, "questionDone": solvedProblem.length })
-      );
+    res.status(200).json(
+      new ApiResponse(200, "Problem fetched successfully", {
+        questions: problemWithStatus,
+        score: user.totalScore,
+        questionDone: userProblem.solvedChallenges.length,
+      })
+    );
   } catch (error) {
     res
       .status(error.status || 500)
@@ -86,7 +84,7 @@ const getProblems = async (
 };
 
 const getAProblems = async (
-  req: Request & { user: IUser; },
+  req: Request & { user: IUser },
   res: Response
 ): Promise<any> => {
   const problemId = req.params.id;
@@ -99,15 +97,14 @@ const getAProblems = async (
 
     if (!foundProblem) throw new ApiError(404, "Problem not found");
 
-
-    const solvedProblem = await UserQuestion.find({ userId: user._id });
-    if (
-      solvedProblem.some(
-        (solved) => solved.questionId.toString() === foundProblem._id.toString()
-      )
-    ) {
-      foundProblem.done = true;
-    }
+   // Validate status of the problem 
+   if (
+    user.solvedChallenges.some(
+      (solved) => solved.challenge.toString() === foundProblem._id.toString()
+    )
+  ) {
+    foundProblem.done = true;
+  }
 
     return res
       .status(200)
@@ -169,7 +166,7 @@ const updateProblem = async (req: Request, res: Response): Promise<void> => {
 };
 
 const deleteProblem = async (
-  req: Request<{ id: string; }>,
+  req: Request<{ id: string }>,
   res: Response
 ): Promise<void> => {
   try {
@@ -188,10 +185,8 @@ const deleteProblem = async (
   }
 };
 
-
-
 const validateFlagAndIncrementUserScore = async (
-  req: Request & { user?: IUser; },
+  req: Request & { user?: IUser },
   res: Response
 ): Promise<any> => {
   try {
@@ -214,12 +209,19 @@ const validateFlagAndIncrementUserScore = async (
     const user = await User.findById(userID);
     if (!user) throw new ApiError(404, "User not found");
 
-    const existingUserQuestion = await UserQuestion.findOne({ userId: userID, "questions.questionId": problemID });
-
-    if (existingUserQuestion) {
+    if (
+      user.solvedChallenges.some(
+        (solved) => solved.challenge.toString() === problemID
+      )
+    ) {
       throw new ApiError(400, "Challenge is already solved");
     }
+
     user.totalScore += problem.points;
+    user.solvedChallenges.push({
+      challenge: problem._id,
+      timestamp: new Date(),
+    });
 
     // Handle Streak Updation
     const streakID = await updateStreak(userID);
@@ -236,17 +238,6 @@ const validateFlagAndIncrementUserScore = async (
     user.rank = userRank + 1;
 
     await user.save();
-
-    let userQuestion = await UserQuestion.findOne({ userId: userID });
-
-    if (!userQuestion) {
-      userQuestion = new UserQuestion({ userId: userID, questions: [] });
-    }
-
-    await UserQuestion.create({
-      questionId: problemID,
-      userId: userID
-    });
 
     return res.status(200).json(new ApiResponse(200, "Challenge Solved"));
   } catch (error) {
