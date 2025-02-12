@@ -12,17 +12,6 @@ import { ApiResponse } from "../utils/ApiBase";
 import "dotenv/config";
 import { generateAccessAndRefreshToken } from "./user.controller";
 
-// const generateAccessAndRefreshToken = async (userID: string) => {
-//   const user = await User.findById(userID);
-//   const accessToken = user.generateAccessToken();
-//   const refreshToken = user.generateRefreshToken();
-
-//   await Token.create({ userID: user._id, token: refreshToken });
-//   // user.refreshToken = refreshToken;
-//   // await user.save({ validateBeforeSave: false });
-
-//   return { accessToken, refreshToken };
-// };
 
 export const authLogout = (req: Request, res: Response) => {
   req.logout((err) => {

@@ -19,6 +19,6 @@ router.route("/login").post(sanitizeForLogin, loginUserHandler);
 router.route("/rotateToken").get(authValidation, rotateTokenHandler);
 router.route("/logout").get(logOutHandler);
 
-router.route("/getUserProfile/:id").get(getUserProfile);
+router.route("/getUserProfile/:id").get(authValidation, getUserProfile);
 
 export default router;

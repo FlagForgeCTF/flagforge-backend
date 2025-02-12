@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { IStreak } from "../interfaces/streak.interface";
 
 const streakSchema = new Schema<IStreak>({

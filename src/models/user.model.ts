@@ -26,12 +26,12 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     },
     team: mongoose.Schema.Types.ObjectId,
     totalScore: { type: Number, default: 0 },
-    // solvedChallenges: [
-    //   {
-    //     challenge: mongoose.Schema.Types.ObjectId,
-    //     timestamp: Date,
-    //   },
-    // ],
+    solvedChallenges: [
+      {
+        challenge: mongoose.Schema.Types.ObjectId,
+        timestamp: Date,
+      },
+    ],
     streak: { type: mongoose.Schema.Types.ObjectId, ref: "Streak" },
     rank: { type: Number },
     refreshToken: { type: String },
