@@ -5,7 +5,10 @@ import {
   requestResetPasswordHandler,
   resetPasswordHandler,
 } from "../controllers/user.controller";
-import { sanitizeForEmail } from "../middlewares/inputValidation";
+import {
+  sanitizeForEmail,
+  sanitizeForPassword,
+} from "../middlewares/inputValidation";
 
 const router = express.Router();
 
@@ -34,6 +37,8 @@ router.get("/logout", authLogout);
 router
   .route("/requestResetPassword")
   .post(sanitizeForEmail, requestResetPasswordHandler);
-router.route("/resetPassword/:token/:id").post(resetPasswordHandler);
+router
+  .route("/resetPassword/:token/:id")
+  .post(sanitizeForPassword, resetPasswordHandler);
 
 export default router;

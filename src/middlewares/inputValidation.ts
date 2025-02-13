@@ -1,7 +1,5 @@
 import { body, validationResult } from "express-validator/lib";
-
 import { Request, Response, NextFunction } from "express";
-
 import { ApiError } from "../utils/ApiBase";
 
 const validateEmail = body("email")
@@ -70,9 +68,12 @@ const sanitizeForRegister = [
 const sanitizeForLogin = [validateEmail, validatePassword, validationResults];
 const sanitizeForFlag = [validateFlag, validationResults];
 const sanitizeForEmail = [validateEmail, validationResults];
+const sanitizeForPassword = [validatePassword, validationResults];
+
 export {
   sanitizeForRegister,
   sanitizeForLogin,
   sanitizeForFlag,
   sanitizeForEmail,
+  sanitizeForPassword
 };
