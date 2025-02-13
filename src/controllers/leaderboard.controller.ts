@@ -31,19 +31,28 @@ const getTopUser = async (limit: number = 10) => {
     );
 
     // Fetch from MongoDB in absence of redis
-    if (!topUsers) {
+    if (topUsers.length === 0) {
       const leaderBoardUser = await Leaderboard.find()
         .sort({ score: -1 })
         .populate("user", "name")
         .lean();
 
-      const formattedLeaderboard = leaderBoardUser.map((entry) => ({
+      // Repopulate Redis for future requests
+      const redisPipeline = redis.multi();
+      leaderBoardUser.forEach((entry) => {
+        redisPipeline.zadd(
+          "leaderboard",
+          entry.score,
+          entry.user._id.toString()
+        );
+      });
+      await redisPipeline.exec();
+
+      return leaderBoardUser.map((entry) => ({
         userID: entry.user._id,
         score: entry.score,
         name: (entry.user as any).name,
       }));
-
-      return formattedLeaderboard;
     }
 
     const leaderboard = [];
@@ -83,4 +92,5 @@ const getLeaderboardHandler = async (
       .json(new ApiError(error.status, error.message));
   }
 };
+
 export { updateLeaderboard, getLeaderboardHandler, getTopUser };
