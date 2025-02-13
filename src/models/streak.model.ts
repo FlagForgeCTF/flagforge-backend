@@ -18,10 +18,10 @@ const streakSchema = new Schema<IStreak>({
 });
 
 // TTL index on lastCompletionDate
-streakSchema.index(
-  { lastCompletionDate: 1 },
-  { expireAfterSeconds: 48 * 60 * 60 }
-);
+// streakSchema.index(
+//   { lastCompletionDate: 1 },
+//   { expireAfterSeconds: 48 * 60 * 60 }
+// );
 
 const Streak = mongoose.model<IStreak>("Streak", streakSchema, "streaks");
 

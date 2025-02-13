@@ -23,10 +23,9 @@ const updateStreak = async (userID: Types.ObjectId) => {
       const timeDifference = now.getTime() - lastDate.getTime();
       const hoursDifference = timeDifference / (1000 * 60 * 60);
 
-      if (hoursDifference < 24) {
+      if (hoursDifference < 48) {
         streakRecord.streak += 1;
-      } else if (hoursDifference >= 48) {
-        streakRecord.streak = 1;
+       
       } else {
         streakRecord.streak = 0;
       }
