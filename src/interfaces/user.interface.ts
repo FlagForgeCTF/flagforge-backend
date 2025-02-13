@@ -14,8 +14,8 @@ export interface IUser extends Document {
     timestamp: Date;
   }[];
   streak?: Types.ObjectId | null;
-  rank?:number
-  refreshToken: string;
+  rank?: number;
+  tokenVersion: Number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +29,7 @@ export interface IUserMethods {
 
 export interface DecodedToken {
   _id: string;
+  tokenVersion: number;
 }
 
-export interface UserModel extends Model<IUser, {}, IUserMethods> { }
+export interface UserModel extends Model<IUser, {}, IUserMethods> {}

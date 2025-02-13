@@ -4,7 +4,7 @@ import { ApiError, ApiResponse } from "../utils/ApiBase";
 import { Request, Response } from "express";
 import { requestPasswordReset, resetPassword } from "./auth.controller";
 import jwt from "jsonwebtoken";
-import { DecodedToken } from "../interfaces/user.interface";
+import { DecodedToken, IUser } from "../interfaces/user.interface";
 import { config } from "../utils/config";
 import { updateLeaderboard } from "./leaderboard.controller";
 
@@ -13,7 +13,7 @@ export const generateAccessAndRefreshToken = async (userID: string) => {
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
 
-  user.refreshToken = refreshToken;
+  user.tokenVersion = Number(user.tokenVersion) + 1;
   await user.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken };
@@ -94,54 +94,6 @@ const loginUserHandler = async (req: Request, res: Response): Promise<any> => {
       .json(new ApiError(error.status, error.message));
   }
 };
-//   req: Request,
-//   res: Response
-// ): Promise<any> => {
-//   try {
-//     const refreshToken =
-//       req.cookies?.__refreshToken_ ||
-//       req.header("Authorization")?.replace("Bearer ", "");
-
-//     if (!refreshToken) throw new ApiError(403, "Refresh token required");
-
-//     let decoded: DecodedToken;
-//     try {
-//       decoded = jwt.verify(refreshToken, config.JWT_SECRET) as DecodedToken;
-
-//       if (!decoded) throw new ApiError(403, "Refresh Token expired");
-//     } catch (err) {
-//       if (err.name === "TokenExpiredError") {
-//         return res
-//           .status(401)
-//           .clearCookie("__accessToken_")
-//           .clearCookie("__refreshToken_")
-//           .json(new ApiError(401, "Session expired. Please log in again."));
-//       }
-//       throw new ApiError(403, "Invalid refresh token");
-//     }
-
-//     const user = await User.findById(decoded._id);
-//     if (!user) throw new ApiError(401, "User not found");
-
-//     const existingToken = await Token.findOne({ userID: user._id });
-
-//     if (!existingToken || existingToken.token !== refreshToken) {
-//       throw new ApiError(403, "Refresh token mismatch");
-//     }
-
-//     const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id.toString());
-
-//     return res
-//       .status(200)
-//       .cookie("__accessToken_", accessToken, accessTokenOptions)
-//       .cookie("__refreshToken_", newRefreshToken, refreshTokenOptions)
-//       .json(new ApiResponse(200, "Access Token refreshed Successfully"));
-//   } catch (error) {
-//     return res
-//       .status(error.status || 500)
-//       .json(new ApiError(error.status, error.message));
-//   }
-// };
 
 const rotateTokenHandler = async (
   req: Request,
@@ -172,13 +124,15 @@ const rotateTokenHandler = async (
     const user = await User.findById(decoded._id);
     if (!user) throw new ApiError(401, "User not found");
 
-    if (user.refreshToken !== refreshToken) {
+    if (user.tokenVersion !== decoded.tokenVersion) {
       throw new ApiError(403, "Refresh token mismatch");
     }
-    const accessToken = user.generateAccessToken();
+    const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+      await generateAccessAndRefreshToken(decoded._id.toString());
     return res
       .status(200)
-      .cookie("__accessToken_", accessToken, accessTokenOptions)
+      .cookie("__accessToken_", newAccessToken, accessTokenOptions)
+      .cookie("__refreshToken_", newRefreshToken, refreshTokenOptions)
       .json(new ApiResponse(200, "Access Token refreshed Successfully"));
   } catch (error) {
     return res
@@ -187,8 +141,14 @@ const rotateTokenHandler = async (
   }
 };
 
-const logOutHandler = async (_: Request, res: Response): Promise<any> => {
+const logOutHandler = async (
+  req: Request & { user: IUser },
+  res: Response
+): Promise<any> => {
   try {
+    const user = req.user;
+    
+    await User.findByIdAndUpdate(user._id, { $inc: { tokenVersion: 1 } });
     return res
       .clearCookie("__accessToken_", accessTokenOptions)
       .clearCookie("__refreshToken_", refreshTokenOptions)
@@ -221,8 +181,10 @@ const resetPasswordHandler = async (
   res: Response
 ): Promise<any> => {
   try {
-    const { token, id } = req.params;
+    const token = req.params.token;
+    const id = req.params.id;
     const { password } = req.body;
+    
     await resetPassword(id, token, password);
     return res
       .status(200)

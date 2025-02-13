@@ -97,14 +97,14 @@ const getAProblems = async (
 
     if (!foundProblem) throw new ApiError(404, "Problem not found");
 
-   // Validate status of the problem 
-   if (
-    user.solvedChallenges.some(
-      (solved) => solved.challenge.toString() === foundProblem._id.toString()
-    )
-  ) {
-    foundProblem.done = true;
-  }
+    // Validate status of the problem
+    if (
+      user.solvedChallenges.some(
+        (solved) => solved.challenge.toString() === foundProblem._id.toString()
+      )
+    ) {
+      foundProblem.done = true;
+    }
 
     return res
       .status(200)
@@ -125,11 +125,13 @@ const postProblems = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const existProblem = await Problem.findOne({ title: title });
+    if (existProblem)
+      throw new ApiError(409, "Please choose a different title");
+
     const newProblem = new Problem(req.body);
     await newProblem.save();
-    res
-      .status(201)
-      .json(new ApiResponse(201, "Problem created successfully", newProblem));
+    res.status(201).json(new ApiResponse(201, "Problem created successfully"));
   } catch (error) {
     res
       .status(error.status || 500)

@@ -12,17 +12,16 @@ import { ApiResponse } from "../utils/ApiBase";
 import "dotenv/config";
 import { generateAccessAndRefreshToken } from "./user.controller";
 
-
 export const authLogout = (req: Request, res: Response) => {
   req.logout((err) => {
     if (err) {
-      return res.status(301).json({ "message": "Error while logging out" });
+      return res.status(301).json({ message: "Error while logging out" });
     }
     req.session.destroy((err) => {
       if (err) {
-        return res.status(301).json({ "message": "Error while logging out" });
+        return res.status(301).json({ message: "Error while logging out" });
       }
-      res.status(200).json({ "message": "Successfully logged out" });
+      res.status(200).json({ message: "Successfully logged out" });
     });
   });
 };
@@ -64,7 +63,7 @@ const resetPassword = async (
   token: string,
   password: string
 ) => {
-  let passwordResetToken = await Token.findOne({ userID });
+  let passwordResetToken = await Token.findOne({ userID: userID });
 
   if (!passwordResetToken)
     throw new ApiError(400, "Invalid or expired password reset token");
@@ -77,6 +76,7 @@ const resetPassword = async (
   const user = await User.findById(userID);
   if (!user) throw new ApiError(400, "User doesnot exists");
   user.password = password;
+  user.tokenVersion = Number(user.tokenVersion) + 1;
   await user.save();
 
   try {
@@ -109,7 +109,9 @@ const token = async (req: Request, res: Response): Promise<any> => {
     .cookie("__refreshToken_", refreshToken, refreshTokenOptions);
 
   const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
-  const redirectURL = `${frontendURL}/register?currentUser=${JSON.stringify(userResponse)}`;
+  const redirectURL = `${frontendURL}/register?currentUser=${JSON.stringify(
+    userResponse
+  )}`;
 
   res.redirect(301, redirectURL);
 };

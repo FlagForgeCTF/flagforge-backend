@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     ],
     streak: { type: mongoose.Schema.Types.ObjectId, ref: "Streak" },
     rank: { type: Number },
-    refreshToken: { type: String },
+    tokenVersion: { type: Number, required: true, default: 0 },
   },
   { timestamps: true }
 );
@@ -57,7 +57,7 @@ userSchema.methods.generateAccessToken = function () {
       image: this.image || "",
     },
     config.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "15m" }
   );
 };
 
@@ -65,9 +65,10 @@ userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this._id,
+      tokenVersion: this.tokenVersion,
     },
     config.JWT_SECRET,
-    { expiresIn: "1d" }
+    { expiresIn: "7d" }
   );
 };
 
@@ -75,7 +76,7 @@ userSchema.methods.toOBJ = function () {
   const user = this;
   const userObject = user.toObject();
   delete userObject.password;
-  delete userObject.refreshToken;
+  delete userObject.tokenVersion;
   return userObject;
 };
 

@@ -17,6 +17,6 @@ const tokenSchema = new mongoose.Schema<IToken>({
     expires: 3600,
   },
 });
-const Token = mongoose.model<IToken>("Token", tokenSchema, "token");
+const Token = mongoose.model<IToken>("Token", tokenSchema, "tokens");
 
 export default Token;
