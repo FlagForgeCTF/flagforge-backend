@@ -21,7 +21,7 @@ connectRedis();
 app.use(cors({
   origin: ["http://localhost:5173", "https://flagforge.xyz", "https://api.flagforge.xyz", "https://v1.flagforge.xyz"],
   // methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  // credentials: true,
+  credentials: true,
 }));
 
 // app.use(helmet());
