@@ -10,11 +10,13 @@ import { updateLeaderboard } from "./leaderboard.controller";
 
 export const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
+  const increasedTokenVersion = Number(user.tokenVersion) + 1;
+  user.tokenVersion = increasedTokenVersion;
+
+  await user.save({ validateBeforeSave: false });
+  
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
-
-  user.tokenVersion = Number(user.tokenVersion) + 1;
-  await user.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken };
 };
@@ -147,7 +149,7 @@ const logOutHandler = async (
 ): Promise<any> => {
   try {
     const user = req.user;
-    
+
     await User.findByIdAndUpdate(user._id, { $inc: { tokenVersion: 1 } });
     return res
       .clearCookie("__accessToken_", accessTokenOptions)
@@ -184,7 +186,7 @@ const resetPasswordHandler = async (
     const token = req.params.token;
     const id = req.params.id;
     const { password } = req.body;
-    
+
     await resetPassword(id, token, password);
     return res
       .status(200)
