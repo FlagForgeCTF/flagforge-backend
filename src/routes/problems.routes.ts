@@ -3,6 +3,7 @@ import {
   deleteProblem,
   getAProblems,
   getProblems,
+  hintHandler,
   postProblems,
   updateProblem,
   validateFlagAndIncrementUserScore,
@@ -28,6 +29,9 @@ router.put("/problem/:id", authValidation, updateProblem);
 
 // DELETE:/problem/:id
 router.delete("/problem/:id", authValidation, deleteProblem);
+
+
+router.get("/hint-usage/:id", authValidation, hintHandler);
 
 // Flag Validation route
 router.post(

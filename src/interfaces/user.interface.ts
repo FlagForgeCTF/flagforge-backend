@@ -9,10 +9,7 @@ export interface IUser extends Document {
   role: "User" | "Admin";
   team?: Types.ObjectId;
   totalScore: number;
-  solvedChallenges: {
-    challenge: Types.ObjectId;
-    timestamp: Date;
-  }[];
+  solvedChallenges: Types.ObjectId | null;
   streak?: Types.ObjectId | null;
   rank?: number;
   tokenVersion: Number;

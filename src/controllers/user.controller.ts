@@ -14,7 +14,7 @@ export const generateAccessAndRefreshToken = async (userID: string) => {
   user.tokenVersion = increasedTokenVersion;
 
   await user.save({ validateBeforeSave: false });
-  
+
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
 
@@ -203,7 +203,14 @@ const getUserProfile = async (req: Request, res: Response): Promise<any> => {
     const userID = req.params.id;
     if (!userID) throw new ApiError(400, "Please provide user ID");
 
-    const user = await User.findById(userID).select("-password -refreshToken");
+    const user = await User.findById(userID)
+      .select("-password -tokenVersion")
+      .populate("streak", "-_id streak")
+      .populate({
+        path: "solvedChallenges",
+        select: "-_id problems",
+        options: { strictPopulate: false }, 
+      });
     if (!user) throw new ApiError(404, "User not found");
     res
       .status(200)

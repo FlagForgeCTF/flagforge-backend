@@ -18,7 +18,7 @@ const problemSchema = new Schema<IProblem>(
     points: { type: Number, required: true },
     flag: { type: String, required: true },
     addilinks: { type: String },
-    hint: { type: String, default: "" },
+    hint: { type: Boolean, default: false },
     link: { type: String },
     done: { type: Boolean, default: false },
   },

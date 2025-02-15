@@ -1,11 +1,12 @@
+import { IUser } from "./../interfaces/user.interface";
 import { ApiError, ApiResponse } from "../utils/ApiBase";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import Problem from "../models/problem.model";
-import { IUser } from "../interfaces/user.interface";
 import User from "../models/user.model";
 import Streak from "../models/streak.model";
 import { Types } from "mongoose";
 import { getTopUser, updateLeaderboard } from "./leaderboard.controller";
+import SolvedProblem from "../models/solvedProblem.model";
 
 const updateStreak = async (userID: Types.ObjectId) => {
   try {
@@ -25,7 +26,6 @@ const updateStreak = async (userID: Types.ObjectId) => {
 
       if (hoursDifference < 48) {
         streakRecord.streak += 1;
-       
       } else {
         streakRecord.streak = 0;
       }
@@ -39,8 +39,7 @@ const updateStreak = async (userID: Types.ObjectId) => {
 
 const getProblems = async (
   req: Request & { user: IUser },
-  res: Response,
-  next: NextFunction
+  res: Response
 ): Promise<void> => {
   try {
     const user = req.user;
@@ -55,24 +54,32 @@ const getProblems = async (
 
     if (!problems) throw new ApiError(404, "Failed to fetch problems");
 
-    const userProblem = await User.findById({ _id: user._id });
+    const solvedProblem = await SolvedProblem.findOne({ user: user._id });
 
+    let problemWithStatus;
     // Get solved problems
-    const solvedProblems = new Set(
-      user.solvedChallenges.map((solved) => solved.challenge.toString())
-    );
+
+    const solvedProblemsMap = solvedProblem
+      ? Object.fromEntries(
+          solvedProblem.problems.map((problem) => [
+            problem.problemID.toString(),
+            problem.usedHint,
+          ])
+        )
+      : {};
 
     // Update the status of problems
-    const problemWithStatus = problems.map((problem) => ({
+    problemWithStatus = problems.map((problem) => ({
       ...problem.toObject(),
-      done: solvedProblems.has(problem._id.toString()),
+      done: solvedProblemsMap.hasOwnProperty(problem._id.toString()),
+      hint: solvedProblemsMap[problem._id.toString()] || false,
     }));
 
     res.status(200).json(
       new ApiResponse(200, "Problem fetched successfully", {
         questions: problemWithStatus,
         score: user.totalScore,
-        questionDone: userProblem.solvedChallenges.length,
+        questionDone: solvedProblem ? solvedProblem.problems.length : 0,
       })
     );
   } catch (error) {
@@ -97,12 +104,19 @@ const getAProblems = async (
     if (!foundProblem) throw new ApiError(404, "Problem not found");
 
     // Validate status of the problem
-    if (
-      user.solvedChallenges.some(
-        (solved) => solved.challenge.toString() === foundProblem._id.toString()
-      )
-    ) {
-      foundProblem.done = true;
+    const solvedProblem = await SolvedProblem.findOne({
+      user: user._id,
+    });
+
+    if (solvedProblem) {
+      const solved = solvedProblem.problems.find(
+        (solved) => solved.problemID.toString() === foundProblem._id.toString()
+      );
+
+      if (solved) {
+        foundProblem.done = true;
+        foundProblem.hint = solved.usedHint;
+      }
     }
 
     return res
@@ -186,6 +200,46 @@ const deleteProblem = async (
   }
 };
 
+const hintHandler = async (
+  req: Request & { user: IUser },
+  res: Response
+): Promise<any> => {
+  try {
+    const userID = req.user?._id;
+    const problemID = req.params.id;
+
+    let solvedProblem = await SolvedProblem.findOne({ user: userID });
+    let filteredProblem = solvedProblem
+      ? solvedProblem.problems.find(
+          (problem) =>
+            problem.problemID.toString() === problemID &&
+            problem.usedHint === true
+        )
+      : null;
+    if (filteredProblem) {
+      throw new ApiError(409, "Hint is already used");
+    }
+    if (!solvedProblem) {
+      solvedProblem = await SolvedProblem.create({
+        user: userID,
+        problems: [{ problemID: problemID, usedHint: true }],
+      });
+    } else if (
+      await SolvedProblem.updateOne(
+        { user: userID },
+        { $push: { problems: { problemID, usedHint: true, solved: false } } }
+      )
+    ) {
+    }
+
+    return res.status(200).json(new ApiResponse(200, "Hint usage successful"));
+  } catch (error) {
+    res
+      .status(error.status || 500)
+      .json(new ApiError(error.status, error.message));
+  }
+};
+
 const validateFlagAndIncrementUserScore = async (
   req: Request & { user?: IUser },
   res: Response
@@ -207,22 +261,47 @@ const validateFlagAndIncrementUserScore = async (
 
     if (flag !== problem.flag) throw new ApiError(401, "Incorrect flag");
 
+    // Validate challenge solved or not
+    let solvedProblem = await SolvedProblem.findOne({ user: userID });
+    let filteredProblem = solvedProblem
+      ? solvedProblem.problems.find(
+          (problem) => problem.problemID.toString() === problemID
+        )
+      : null;
+
+    if (filteredProblem?.solved) {
+      throw new ApiError(400, "Problem already solved");
+    }
+    if (!solvedProblem) {
+      solvedProblem = await SolvedProblem.create({
+        user: userID,
+        problems: [{ problemID: problem._id, solved: true }],
+      });
+    }
+    if (!filteredProblem) {
+      await SolvedProblem.updateOne(
+        {
+          user: userID,
+        },
+        { $push: { problems: { problemID, solved: true, usedHint: false } } }
+      );
+    }
+    if (filteredProblem && !filteredProblem?.solved) {
+      await SolvedProblem.updateOne(
+        {
+          user: userID,
+          "problems.problemID": problemID,
+        },
+        { $set: { "problems.$.solved": true } }
+      );
+    }
     const user = await User.findById(userID);
+
     if (!user) throw new ApiError(404, "User not found");
 
-    if (
-      user.solvedChallenges.some(
-        (solved) => solved.challenge.toString() === problemID
-      )
-    ) {
-      throw new ApiError(400, "Challenge is already solved");
-    }
-
-    user.totalScore += problem.points;
-    user.solvedChallenges.push({
-      challenge: problem._id,
-      timestamp: new Date(),
-    });
+    // Hint Validation for point deduction
+    const usedHint = filteredProblem?.usedHint || false;
+    user.totalScore += usedHint ? problem.points / 2 : problem.points;
 
     // Handle Streak Updation
     const streakID = await updateStreak(userID);
@@ -233,10 +312,12 @@ const validateFlagAndIncrementUserScore = async (
 
     // Update User rank
     const rank = await getTopUser(-1);
+
     const userRank = rank.findIndex(
       (user) => user.userID.toString() === userID.toString()
     );
     user.rank = userRank + 1;
+    user.solvedChallenges = solvedProblem._id;
 
     await user.save();
 
@@ -254,5 +335,6 @@ export {
   getProblems,
   postProblems,
   updateProblem,
+  hintHandler,
   validateFlagAndIncrementUserScore,
 };

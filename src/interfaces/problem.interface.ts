@@ -6,7 +6,7 @@ export interface IProblem extends Document {
   level: string;
   flag: string;
   addilinks?: string;
-  hint?: string;
+  hint?: boolean;
   link?: string;
   done?: boolean;
 }

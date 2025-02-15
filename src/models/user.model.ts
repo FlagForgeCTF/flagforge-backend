@@ -1,5 +1,5 @@
 import { IUser, IUserMethods, UserModel } from "./../interfaces/user.interface";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { config } from "../utils/config";
@@ -26,12 +26,10 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     },
     team: mongoose.Schema.Types.ObjectId,
     totalScore: { type: Number, default: 0 },
-    solvedChallenges: [
-      {
-        challenge: mongoose.Schema.Types.ObjectId,
-        timestamp: Date,
-      },
-    ],
+    solvedChallenges: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SolvedProblem",
+    },
     streak: { type: mongoose.Schema.Types.ObjectId, ref: "Streak" },
     rank: { type: Number },
     tokenVersion: { type: Number, required: true, default: 0 },
