@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { DecodedToken, IUser } from "../interfaces/user.interface";
 import { config } from "../utils/config";
 import { updateLeaderboard } from "./leaderboard.controller";
+import { updateStreak } from "./problem.controller";
 
 export const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
@@ -209,9 +210,11 @@ const getUserProfile = async (req: Request, res: Response): Promise<any> => {
       .populate({
         path: "solvedChallenges",
         select: "-_id problems",
-        options: { strictPopulate: false }, 
+        options: { strictPopulate: false },
       });
     if (!user) throw new ApiError(404, "User not found");
+
+    await updateStreak(user._id, false);
     res
       .status(200)
       .json(new ApiResponse(200, "User profile fetched successfully", user));

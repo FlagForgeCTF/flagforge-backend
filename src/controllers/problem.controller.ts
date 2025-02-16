@@ -8,7 +8,7 @@ import { Types } from "mongoose";
 import { getTopUser, updateLeaderboard } from "./leaderboard.controller";
 import SolvedProblem from "../models/solvedProblem.model";
 
-const updateStreak = async (userID: Types.ObjectId) => {
+const updateStreak = async (userID: Types.ObjectId, flagSubmitted: boolean) => {
   try {
     let streakRecord = await Streak.findOne({ user: userID });
     const now = new Date();
@@ -16,16 +16,20 @@ const updateStreak = async (userID: Types.ObjectId) => {
     if (!streakRecord) {
       streakRecord = await Streak.create({
         user: userID,
-        streak: 1,
-        lastCompletionDate: now,
+        streak: flagSubmitted ? 1 : 0,
+        lastCompletionDate: flagSubmitted ? now : null,
       });
     } else {
-      const lastDate = streakRecord.lastCompletionDate;
-      const timeDifference = now.getTime() - lastDate.getTime();
-      const hoursDifference = timeDifference / (1000 * 60 * 60);
+      if (streakRecord.lastCompletionDate) {
+        const lastDate = streakRecord.lastCompletionDate;
+        const timeDifference = now.getTime() - lastDate.getTime();
+        const hoursDifference = timeDifference / (1000 * 60 * 60);
 
-      if (hoursDifference < 48) {
-        streakRecord.streak += 1;
+        if (hoursDifference < 48) {
+          streakRecord.streak += 1;
+        } else {
+          streakRecord.streak = 0;
+        }
       } else {
         streakRecord.streak = 0;
       }
@@ -304,7 +308,7 @@ const validateFlagAndIncrementUserScore = async (
     user.totalScore += usedHint ? problem.points / 2 : problem.points;
 
     // Handle Streak Updation
-    const streakID = await updateStreak(userID);
+    const streakID = await updateStreak(userID, true);
     user.streak = streakID;
 
     // Update Leaderboard
@@ -336,5 +340,6 @@ export {
   postProblems,
   updateProblem,
   hintHandler,
+  updateStreak,
   validateFlagAndIncrementUserScore,
 };
