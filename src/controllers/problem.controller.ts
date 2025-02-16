@@ -14,28 +14,35 @@ const updateStreak = async (userID: Types.ObjectId, flagSubmitted: boolean) => {
     const now = new Date();
 
     if (!streakRecord) {
-      streakRecord = await Streak.create({
-        user: userID,
-        streak: flagSubmitted ? 1 : 0,
-        lastCompletionDate: flagSubmitted ? now : null,
-      });
+      if (flagSubmitted) {
+        streakRecord = await Streak.create({
+          user: userID,
+          streak: 1,
+          lastCompletionDate: now,
+        });
+      }
     } else {
-      if (streakRecord.lastCompletionDate) {
-        const lastDate = streakRecord.lastCompletionDate;
-        const timeDifference = now.getTime() - lastDate.getTime();
-        const hoursDifference = timeDifference / (1000 * 60 * 60);
+      const lastDate = streakRecord.lastCompletionDate;
+      const timeDifference = now.getTime() - lastDate.getTime();
+      const hoursDifference = timeDifference / (1000 * 60 * 60);
 
-        if (hoursDifference < 48) {
+      if (hoursDifference >= 48) {
+        streakRecord.streak = 0;
+      }
+
+      if (flagSubmitted) {
+        if (streakRecord.streak > 0 && hoursDifference < 48) {
           streakRecord.streak += 1;
         } else {
           streakRecord.streak = 0;
         }
-      } else {
-        streakRecord.streak = 0;
+        streakRecord.lastCompletionDate = now;
       }
+
+      await streakRecord.save();
     }
-    await streakRecord.save();
-    return streakRecord._id as Types.ObjectId;
+
+    return streakRecord?._id as Types.ObjectId;
   } catch (error) {
     throw new ApiError(500, "Error updating streak");
   }
