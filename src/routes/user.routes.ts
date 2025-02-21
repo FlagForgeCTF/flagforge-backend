@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  generateOTP,
   getUserProfile,
   logOutHandler,
   loginUserHandler,
@@ -18,6 +19,7 @@ router.route("/signup").post(sanitizeForRegister, registerUserHandler);
 router.route("/login").post(sanitizeForLogin, loginUserHandler);
 router.route("/rotateToken").get(rotateTokenHandler);
 router.route("/logout").get(authValidation,logOutHandler);
+router.route('/otp-generate').post(generateOTP)
 
 router.route("/getUserProfile/:id").get(authValidation, getUserProfile);
 

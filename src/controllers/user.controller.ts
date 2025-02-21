@@ -8,6 +8,8 @@ import { DecodedToken, IUser } from "../interfaces/user.interface";
 import { config } from "../utils/config";
 import { updateLeaderboard } from "./leaderboard.controller";
 import { updateStreak } from "./problem.controller";
+import { OTP } from "../models/otp.model";
+import { sendEmailForOTP } from "../utils/sendEmail";
 
 export const generateAccessAndRefreshToken = async (userID: string) => {
   const user = await User.findById(userID);
@@ -22,20 +24,70 @@ export const generateAccessAndRefreshToken = async (userID: string) => {
   return { accessToken, refreshToken };
 };
 
+const generateOTP = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new ApiError(400, "Please enter your email");
+
+    const userExists = await User.findOne({ email: email });
+    if (userExists)
+      throw new ApiError(409, "User already exists with this email");
+
+    const existingOTP = await OTP.findOne({ email: email });
+    if (existingOTP)
+      throw new ApiError(
+        429,
+        "OTP already generated. Please wait before requesting a new one."
+      );
+
+    let otpCode = "";
+    for (let i = 0; i < 6; i++) {
+      otpCode += Math.floor(Math.random() * 10);
+    }
+
+    await OTP.create({
+      email: email,
+      otp: otpCode,
+      createdAt: new Date(),
+    });
+
+    sendEmailForOTP(
+      email,
+      "OTP Verification",
+      { otpCode: otpCode },
+      "../utils/templates/otp.handlebars"
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "OTP sent successfully", otpCode));
+  } catch (error) {
+    return res
+      .status(error.status || 500)
+      .json(new ApiError(error.status, error.message));
+  }
+};
+
 const registerUserHandler = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, otp } = req.body;
 
-    if (!name || !email || !password)
+    if (!name || !email || !password || !otp)
       throw new ApiError(400, "Please provide all the required fields");
 
     const existingUser = await User.findOne({ email });
 
     if (existingUser)
       throw new ApiError(409, "User already exists with this email");
+
+    // Verify OTP
+    const otpDB = await OTP.findOne({ otp: otp });
+    if (!otpDB) throw new ApiError(400, "Please generate OTP first");
+
+    if (otpDB.otp !== otp) throw new ApiError(409, "Invalid OTP");
 
     const user = await User.create({
       email,
@@ -233,4 +285,5 @@ export {
   rotateTokenHandler,
   logOutHandler,
   getUserProfile,
+  generateOTP,
 };

@@ -1,3 +1,4 @@
+import { OTP } from "./../models/otp.model";
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import User from "../models/user.model";
@@ -5,7 +6,7 @@ import { ApiError } from "../utils/ApiBase";
 import Token from "../models/token.model";
 import crypto from "crypto";
 import { config } from "../utils/config";
-import { sendEmail } from "../utils/sendEmail";
+import {  sendEmailForPasswordReset } from "../utils/sendEmail";
 import { accessTokenOptions } from "../utils/options";
 import { refreshTokenOptions } from "../utils/options";
 import { ApiResponse } from "../utils/ApiBase";
@@ -45,7 +46,7 @@ const requestPasswordReset = async (email: string) => {
 
   const link = `${config.BASE_URL}/resetPassword/${resetToken}/${user._id}`;
   try {
-    const emailMessage = await sendEmail(
+    const emailMessage = await sendEmailForPasswordReset(
       user.email,
       "Password Reset Request",
       { name: user.name, link: link },
@@ -80,7 +81,7 @@ const resetPassword = async (
   await user.save();
 
   try {
-    const emailMessage = sendEmail(
+    const emailMessage = sendEmailForPasswordReset(
       user.email,
       "Password Reset Successfully",
       {
