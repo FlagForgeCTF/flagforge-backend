@@ -5,17 +5,19 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN npm install
-RUN npm install tsc
-RUN npm run build
 
 COPY . .
 
+RUN npm run build
 
-FROM node:lts-alpine
+FROM node:lts-alpine AS production
 
 WORKDIR /app
-COPY --from=builder /app /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["npm","run", "start"]
+CMD ["node", "dist/index.js"]
