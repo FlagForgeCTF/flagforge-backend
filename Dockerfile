@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN npm ci --only=production
+RUN npm run build
 
 COPY . .
 
@@ -16,4 +17,4 @@ COPY --from=builder /app /app
 
 EXPOSE 3000
 
-CMD ["node", "src/index.ts"]
+CMD ["npm","run", "start"]
