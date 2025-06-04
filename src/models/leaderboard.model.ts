@@ -9,6 +9,6 @@ const leaderboardSchema = new Schema<ILeaderboard>({
 
 const Leaderboard = mongoose.model<ILeaderboard>(
   "Leaderboard",
-  leaderboardSchema
+  leaderboardSchema,
 );
 export { Leaderboard };

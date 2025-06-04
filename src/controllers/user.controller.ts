@@ -60,7 +60,7 @@ const generateOTP = async (req: Request, res: Response): Promise<any> => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, "OTP sent successfully", otpCode));
+      .json(new ApiResponse(200, "OTP sent successfully"));
   } catch (error) {
     return res
       .status(error.status || 500)
@@ -101,7 +101,7 @@ const registerUserHandler = async (
       user._id.toString()
     );
 
-    const userResponse = user.toOBJ();
+    const userResponse = { name: user.name, image: user.image, totalScore: user.totalScore, streak: user.streak };
 
     // Update Leaderboard
     await updateLeaderboard(user._id, user.totalScore);
@@ -137,7 +137,7 @@ const loginUserHandler = async (req: Request, res: Response): Promise<any> => {
       user._id.toString()
     );
 
-    const userResponse = user.toOBJ();
+    const userResponse = { name: user.name, image: user.image, totalScore: user.totalScore, streak: user.streak };
     return res
       .status(200)
       .cookie("__accessToken_", accessToken, accessTokenOptions)
@@ -197,7 +197,7 @@ const rotateTokenHandler = async (
 };
 
 const logOutHandler = async (
-  req: Request & { user: IUser },
+  req: Request & { user: IUser; },
   res: Response
 ): Promise<any> => {
   try {
