@@ -101,7 +101,7 @@ const registerUserHandler = async (
       user._id.toString()
     );
 
-    const userResponse = user.toOBJ();
+    const userResponse = { name: user.name, image: user.image, totalScore: user.totalScore, streak: user.streak };
 
     // Update Leaderboard
     await updateLeaderboard(user._id, user.totalScore);
@@ -137,7 +137,7 @@ const loginUserHandler = async (req: Request, res: Response): Promise<any> => {
       user._id.toString()
     );
 
-    const userResponse = user.toOBJ();
+    const userResponse = { name: user.name, image: user.image, totalScore: user.totalScore, streak: user.streak };
     return res
       .status(200)
       .cookie("__accessToken_", accessToken, accessTokenOptions)
