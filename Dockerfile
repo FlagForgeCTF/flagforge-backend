@@ -16,4 +16,4 @@ COPY --from=builder /app /app
 
 EXPOSE 3000
 
-CMD ["node", "src/app.ts"]
+CMD ["node", "src/index.ts"]
