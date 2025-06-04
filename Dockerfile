@@ -4,7 +4,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production
+RUN npm install
+RUN npm install tsc
 RUN npm run build
 
 COPY . .
