@@ -1,4 +1,4 @@
-FROM node:lts-alpine AS builder
+FROM node:lts-alpine
 
 WORKDIR /app
 
@@ -10,14 +10,6 @@ COPY . .
 
 RUN npm run build
 
-FROM node:lts-alpine AS production
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY --from=builder /app/dist ./dist
-
 EXPOSE 3000
 
-CMD ["node", "dist/index.js"]
+CMD ["npm","run", "start"]
