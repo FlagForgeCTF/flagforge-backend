@@ -25,7 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mailgun-js": "^0.22.0",
     "mongoose": "^8.9.5",
-    "nodemailer": "^6.10.0",
+    "nodemailer": "^7.0.7",
     "nodemon": "^3.1.9",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0"
