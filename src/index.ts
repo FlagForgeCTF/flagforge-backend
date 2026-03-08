@@ -24,7 +24,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// app.use(helmet());
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieparser());
